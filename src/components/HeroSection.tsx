@@ -21,7 +21,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="h-dvh p-0 md:p-6">
+    <section className="h-[50vh] md:h-dvh p-0 md:p-6">
       <div className="relative h-full w-full md:rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
         {/* YouTube iframe background */}
         <div className="absolute inset-0 w-full h-full">
