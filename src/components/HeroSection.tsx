@@ -1,17 +1,21 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import WordsPullUp from './WordsPullUp';
 
+function postToPlayer(ref: React.RefObject<HTMLIFrameElement | null>, func: string) {
+  ref.current?.contentWindow?.postMessage(
+    JSON.stringify({ event: 'command', func, args: [] }),
+    '*'
+  );
+}
+
 export default function HeroSection() {
   const [muted, setMuted] = useState(true);
-  const [key, setKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const toggleMute = () => {
-    setMuted((m) => {
-      const next = !m;
-      setKey((k) => k + 1);
-      return next;
-    });
+    postToPlayer(iframeRef, muted ? 'unMute' : 'mute');
+    setMuted((m) => !m);
   };
 
   return (
@@ -20,8 +24,8 @@ export default function HeroSection() {
         {/* YouTube iframe background */}
         <div className="absolute inset-0 w-full h-full">
           <iframe
-            key={key}
-            src={`https://www.youtube.com/embed/Eomk8ivqQSA?autoplay=1&loop=1&playlist=Eomk8ivqQSA&controls=0&modestbranding=1&rel=0&playsinline=1&mute=${muted ? 1 : 0}&enablejsapi=0`}
+            ref={iframeRef}
+            src="https://www.youtube.com/embed/Eomk8ivqQSA?autoplay=1&loop=1&playlist=Eomk8ivqQSA&controls=0&modestbranding=1&rel=0&playsinline=1&mute=1&enablejsapi=1"
             className="absolute top-1/2 left-1/2 w-[177.78vh] h-[56.25vw] min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
             allow="autoplay; encrypted-media"
             title="Sapna Jahan - Akash Mangeshkar Cover"
