@@ -17,7 +17,7 @@ export default function AboutSection() {
     <section className="bg-black px-4 sm:px-6 md:px-8 py-1 sm:py-20 md:py-28" id="about">
       <div className="bg-[#101010] rounded-3xl sm:rounded-[2rem] px-6 sm:px-10 md:px-16 py-12 sm:py-16 md:py-20 max-w-6xl mx-auto">
         {/* Label */}
-        <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-widest mb-8 sm:mb-10 md:mb-12">
+        <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-widest mb-8 sm:mb-10 md:mb-12 text-center">
           Frontman — Akash The Band
         </p>
 
