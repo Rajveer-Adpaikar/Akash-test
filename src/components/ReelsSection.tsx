@@ -24,16 +24,41 @@ export default function ReelsSection() {
   const activeIdRef = useRef<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
-  const [loaded, setLoaded] = useState(false);
 
-  // Lazy-init players when section enters viewport
+  // Init player for an individual reel
+  const initOne = useCallback((el: Element) => {
+    const players = playersRef.current;
+    const id = el.getAttribute('data-reel-id');
+    if (!id || players.has(id)) return;
+    const iframe = el.querySelector<HTMLIFrameElement>('iframe');
+    if (!iframe || iframe.src.includes('vimeo.com')) return;
+    iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`;
+    initPlayer(iframe).then((player) => {
+      player.setVolume(0)
+        .then(() => player.pause())
+        .then(() => {
+          if (id === '1208158886') return player.setCurrentTime(1);
+        })
+        .then(() => {
+          players.set(id, player);
+        });
+    });
+  }, []);
+
+  // On mount: init first 2 reels immediately; lazy-load rest when section is near
   useEffect(() => {
     const section = sectionRef.current;
-    if (!section || loaded) return;
+    if (!section) return;
+
+    // Init first 2 reels right away
+    const cards = scrollRef.current?.querySelectorAll('[data-reel-id]');
+    cards?.forEach((el, i) => { if (i < 2) initOne(el); });
+
+    // Lazy-load remaining reels when section scrolls into view
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setLoaded(true);
+          cards?.forEach((el, i) => { if (i >= 2) initOne(el); });
           obs.disconnect();
         }
       },
@@ -41,51 +66,29 @@ export default function ReelsSection() {
     );
     obs.observe(section);
     return () => obs.disconnect();
-  }, [loaded]);
+  }, [initOne]);
 
-  // Init players (runs once after lazy-load triggers)
+  // Once a reel player is ready, try playing the center one
   useEffect(() => {
-    if (!loaded) return;
     const players = playersRef.current;
-    const cards = scrollRef.current?.querySelectorAll('[data-reel-id]');
-    let readyCount = 0;
-    const total = cards?.length || 0;
+    if (players.size === 0) return;
+    const sw = scrollRef.current;
+    if (!sw) return;
+    const cards = sw.querySelectorAll('[data-reel-id]');
+    const anyReady = Array.from(cards).some((el) => players.has(el.getAttribute('data-reel-id') || ''));
+    if (!anyReady) return;
 
-    cards?.forEach((el) => {
-      const id = el.getAttribute('data-reel-id');
-      if (!id || players.has(id)) return;
-      const iframe = el.querySelector('iframe');
-      if (!iframe) return;
-      // Swap placeholder for real video src
-      iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`;
-
-      initPlayer(iframe).then((player) => {
-        player.setVolume(0)
-          .then(() => player.pause())
-          .then(() => {
-            if (id === '1208158886') return player.setCurrentTime(1);
-          })
-          .then(() => {
-            players.set(id, player);
-            readyCount++;
-            if (readyCount === total) {
-              const first = scrollRef.current?.querySelector('[data-reel-id]');
-              const fid = first?.getAttribute('data-reel-id');
-              if (fid && players.has(fid)) {
-                const rect = first!.getBoundingClientRect();
-                const sw = scrollRef.current!;
-                const sRect = sw.getBoundingClientRect();
-                if (rect.left >= sRect.left && rect.right <= sRect.right) {
-                  players.get(fid).play();
-                  activeIdRef.current = fid;
-                }
-              }
-            }
-          });
-      });
-    });
-    return () => { players.forEach((p: any) => p.destroy()); players.clear(); };
-  }, [loaded]);
+    const first = cards[0];
+    const fid = first?.getAttribute('data-reel-id');
+    if (fid && players.has(fid) && !activeIdRef.current) {
+      const rect = first!.getBoundingClientRect();
+      const sRect = sw.getBoundingClientRect();
+      if (rect.left >= sRect.left && rect.right <= sRect.right) {
+        players.get(fid).play();
+        activeIdRef.current = fid;
+      }
+    }
+  });
 
   // Scroll-based active detection
   useEffect(() => {
@@ -139,7 +142,7 @@ export default function ReelsSection() {
 
     sw.addEventListener('scroll', check, { passive: true });
     return () => { sw.removeEventListener('scroll', check); };
-  }, [loaded]);
+  }, []);
 
   // Listen: when hero unmutes, auto-mute reels
   useEffect(() => {
@@ -185,7 +188,6 @@ export default function ReelsSection() {
                 <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
                   <iframe
                     className="absolute inset-0 w-full h-full pointer-events-none"
-                    src={loaded ? `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1` : 'about:blank'}
                     allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                     title={`Reel ${i + 1}`}
                   />
