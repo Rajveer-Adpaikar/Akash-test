@@ -1,18 +1,5 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import WordsPullUpMultiStyle from './WordsPullUpMultiStyle';
-
-const aboutSegments = [
-  { text: 'I am Akash Mangeshkar,', className: 'font-body font-normal text-[#E1E0CC]' },
-  {
-    text: 'a playback singer & frontman.',
-    className: 'italic font-display text-[#E1E0CC]',
-  },
-  {
-    text: 'I lead Goa&apos;s premier Bollywood ensemble for luxury weddings and corporate events.',
-    className: 'font-body font-normal text-[#E1E0CC]',
-  },
-];
 
 const bodyText =
   'Performed with Papon at a Goa concert — 738K views, 31K likes. Our band of 6 seasoned musicians (lead vocals, female vocals, keys, bass, lead guitar, drums) plus professional sound production delivers Bollywood hits, romantic covers, and high-energy live sets that turn every event into an unforgettable experience.';
@@ -46,17 +33,10 @@ export default function AboutSection() {
 
           {/* Text */}
           <div>
-            {/* Multi-style heading */}
-            <div className="max-w-3xl">
-              <WordsPullUpMultiStyle
-                segments={aboutSegments}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[0.95] sm:leading-[0.9] text-left"
-                delay={0.1}
-              />
-            </div>
-
-            {/* Spacer */}
-            <div className="h-8 sm:h-10 md:h-12" />
+            {/* Intro paragraph */}
+            <p className="font-body text-base sm:text-lg md:text-xl leading-relaxed text-[#E1E0CC] text-left mb-8">
+              I am Akash Mangeshkar, a playback singer &amp; frontman. I lead Goa's premier Bollywood ensemble for luxury weddings and corporate events.
+            </p>
 
             {/* Body - scroll-animated characters */}
             <div ref={ref} className="relative max-w-2xl">
