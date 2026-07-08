@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
-import WordsPullUp from './WordsPullUp';
 
 function postToPlayer(ref: React.RefObject<HTMLIFrameElement | null>, func: string) {
   try {
@@ -76,28 +75,7 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Hero Content — Akash heading (upper area) */}
-        <div
-          className="absolute left-0 right-0 z-10 px-6 sm:px-8 md:px-10 lg:px-12 top-24 md:top-[22vh]"
-        >
-          <div className="grid grid-cols-12">
-            <div className="col-span-12 md:col-span-8">
-              <h1
-                className="font-display font-medium leading-[0.85] tracking-[-0.07em] text-[#E1E0CC] relative inline-block"
-                style={{ fontSize: 'clamp(5rem, 26vw, 20vw)' }}
-              >
-                <WordsPullUp
-                  text="Akash"
-                  className="relative"
-                  wordClassName="relative"
-                  delay={0.15}
-                />
-              </h1>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero Content — Description + CTA (lower area) */}
+        {/* Hero Content — Description + CTA */}
         <div className="absolute left-0 right-0 z-10 px-6 sm:px-8 md:px-10 lg:px-12 bottom-6 sm:bottom-8 md:bottom-12 pb-2 sm:pb-2">
           <div className="grid grid-cols-12 gap-4 items-end">
             <div className="col-span-12 md:col-span-4 md:col-start-9">
