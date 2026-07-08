@@ -81,7 +81,7 @@ export default function HeroSection() {
           <div className="grid grid-cols-12 gap-4 items-end">
             <div className="col-span-12 md:col-span-8">
               <h1
-                className="font-medium leading-[0.85] tracking-[-0.07em] text-[#E1E0CC] relative inline-block"
+                className="font-display font-medium leading-[0.85] tracking-[-0.07em] text-[#E1E0CC] relative inline-block"
                 style={{ fontSize: 'clamp(5rem, 26vw, 20vw)' }}
               >
                 <WordsPullUp
@@ -98,9 +98,8 @@ export default function HeroSection() {
                 className="text-white text-xs sm:text-sm md:text-base leading-[1.2] mb-4 sm:mb-6 drop-shadow-md"
                 style={{ animation: 'fadeUp 0.6s 0.5s both' }}
               >
-                Goa&apos;s premier Bollywood ensemble — a 6-piece band bringing
-                high-energy live performances, romantic covers, and unforgettable
-                entertainment to destination weddings and corporate events across India.
+                Goa&apos;s voice. India&apos;s stage. — A 6-piece Bollywood ensemble
+                turning luxury weddings &amp; corporate events into unforgettable performances.
               </p>
 
               <a

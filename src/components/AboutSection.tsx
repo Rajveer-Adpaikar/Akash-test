@@ -3,14 +3,14 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import WordsPullUpMultiStyle from './WordsPullUpMultiStyle';
 
 const aboutSegments = [
-  { text: 'I am Akash Mangeshkar,', className: 'font-normal text-[#E1E0CC]' },
+  { text: 'I am Akash Mangeshkar,', className: 'font-body font-normal text-[#E1E0CC]' },
   {
     text: 'a playback singer & frontman.',
-    className: 'italic font-serif text-[#E1E0CC]',
+    className: 'italic font-display text-[#E1E0CC]',
   },
   {
     text: 'I lead Goa&apos;s premier Bollywood ensemble for luxury weddings and corporate events.',
-    className: 'font-normal text-[#E1E0CC]',
+    className: 'font-body font-normal text-[#E1E0CC]',
   },
 ];
 

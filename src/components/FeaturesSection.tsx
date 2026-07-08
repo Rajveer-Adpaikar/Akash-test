@@ -86,7 +86,7 @@ export default function FeaturesSection() {
                 />
               </video>
             </div>
-            <p className="text-[#E1E0CC] text-xs sm:text-sm mt-3 font-medium">
+            <p className="text-[#E1E0CC] text-xs sm:text-sm mt-3 font-display font-medium">
               The Akash Experience
             </p>
           </FeatureCard>
@@ -98,7 +98,7 @@ export default function FeaturesSection() {
                 <span className="text-primary font-bold text-lg">♪</span>
               </div>
               <div>
-                <h3 className="text-primary text-sm sm:text-base font-medium">
+                <h3 className="text-primary text-sm sm:text-base font-display">
                   Live Performances.
                 </h3>
                 <span className="text-gray-500 text-xs">(01)</span>
@@ -128,7 +128,7 @@ export default function FeaturesSection() {
                 <span className="text-primary font-bold text-lg">◆</span>
               </div>
               <div>
-                <h3 className="text-primary text-sm sm:text-base font-medium">
+                <h3 className="text-primary text-sm sm:text-base font-display">
                   Corporate Events.
                 </h3>
                 <span className="text-gray-500 text-xs">(02)</span>
@@ -158,7 +158,7 @@ export default function FeaturesSection() {
                 <span className="text-primary font-bold text-lg">♥</span>
               </div>
               <div>
-                <h3 className="text-primary text-sm sm:text-base font-medium">
+                <h3 className="text-primary text-sm sm:text-base font-display">
                   Destination Weddings.
                 </h3>
                 <span className="text-gray-500 text-xs">(03)</span>
