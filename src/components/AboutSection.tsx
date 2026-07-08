@@ -25,7 +25,7 @@ export default function AboutSection() {
           {/* Image */}
           <div className="w-full">
             <img
-              src={`${import.meta.env.BASE_URL}akash-portrait.jpg`}
+              src={`${import.meta.env.BASE_URL}akash-portrait.jpg?v=2`}
               alt="Akash Mangeshkar"
               className="w-full h-auto rounded-2xl object-cover"
             />
