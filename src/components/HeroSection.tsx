@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
+import InquiryModal from './InquiryModal';
 
 function postToPlayer(ref: React.RefObject<HTMLIFrameElement | null>, func: string) {
   try {
@@ -12,6 +13,7 @@ function postToPlayer(ref: React.RefObject<HTMLIFrameElement | null>, func: stri
 
 export default function HeroSection() {
   const [muted, setMuted] = useState(true);
+  const [showInquiry, setShowInquiry] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const toggleMute = () => {
@@ -88,16 +90,16 @@ export default function HeroSection() {
                 entertainment to destination weddings and corporate events across India.
               </p>
 
-              <a
-                href="tel:+919923837062"
+              <button
+                onClick={() => setShowInquiry(true)}
                 className="group inline-flex items-center gap-2 bg-primary rounded-full text-black font-medium text-sm sm:text-base px-5 sm:px-6 py-2 sm:py-2.5 transition-all duration-300 hover:gap-3 shadow-2xl shadow-black/80"
                 style={{ animation: 'fadeUp 0.6s 0.7s both' }}
               >
-                Book Now
+                Inquire Now
                 <span className="bg-black rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </span>
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -109,6 +111,8 @@ export default function HeroSection() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+
+      <InquiryModal open={showInquiry} onClose={() => setShowInquiry(false)} />
     </section>
   );
 }

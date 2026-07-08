@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check, ArrowRight } from 'lucide-react';
 import WordsPullUpMultiStyle from './WordsPullUpMultiStyle';
+import InquiryModal from './InquiryModal';
 
 const headerSegments = [
   {
@@ -51,6 +52,7 @@ function CheckItem({ text }: { text: string }) {
 
 export default function FeaturesSection() {
   const headerRef = useRef<HTMLDivElement>(null);
+  const [showInquiry, setShowInquiry] = useState(false);
   useInView(headerRef, { once: true, margin: '-50px' });
 
   return (
@@ -112,13 +114,13 @@ export default function FeaturesSection() {
               <CheckItem text="Professional FOH sound & production" />
             </ul>
 
-            <a
-              href="tel:+919923837062"
+            <button
+              onClick={() => setShowInquiry(true)}
               className="group inline-flex items-center gap-1 text-primary text-xs mt-4 hover:underline"
             >
-              Book now
+              Inquire now
               <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5 -rotate-45" />
-            </a>
+            </button>
           </FeatureCard>
 
           {/* Card 3 - Corporate Events */}
@@ -142,13 +144,13 @@ export default function FeaturesSection() {
               <CheckItem text="Full production & logistics coordination" />
             </ul>
 
-            <a
-              href="tel:+919923837062"
+            <button
+              onClick={() => setShowInquiry(true)}
               className="group inline-flex items-center gap-1 text-primary text-xs mt-4 hover:underline"
             >
-              Book now
+              Inquire now
               <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5 -rotate-45" />
-            </a>
+            </button>
           </FeatureCard>
 
           {/* Card 4 - Destination Weddings */}
@@ -172,16 +174,18 @@ export default function FeaturesSection() {
               <CheckItem text="Seamless coordination with your wedding planners" />
             </ul>
 
-            <a
-              href="tel:+919923837062"
+            <button
+              onClick={() => setShowInquiry(true)}
               className="group inline-flex items-center gap-1 text-primary text-xs mt-4 hover:underline"
             >
-              Book now
+              Inquire now
               <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5 -rotate-45" />
-            </a>
+            </button>
           </FeatureCard>
         </div>
       </div>
+
+      <InquiryModal open={showInquiry} onClose={() => setShowInquiry(false)} />
     </section>
   );
 }
