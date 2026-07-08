@@ -1,11 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import InquiryModal from './InquiryModal';
 
-function postToPlayer(ref: React.RefObject<HTMLIFrameElement | null>, func: string) {
+function postToStreamable(ref: React.RefObject<HTMLIFrameElement | null>, cmd: string) {
   try {
     ref.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: [] }),
+      JSON.stringify({ type: 'player', command: cmd }),
       '*'
     );
   } catch {}
@@ -15,22 +15,25 @@ export default function HeroSection() {
   const [muted, setMuted] = useState(true);
   const [showInquiry, setShowInquiry] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [src] = useState(
+    'https://streamable.com/e/fb392i?autoplay=1&muted=1&controls=0&loop=0'
+  );
 
-  const toggleMute = () => {
-    postToPlayer(iframeRef, muted ? 'unMute' : 'mute');
+  const toggleMute = useCallback(() => {
+    postToStreamable(iframeRef, muted ? 'unmute' : 'mute');
     setMuted((m) => !m);
-  };
+  }, [muted]);
 
   return (
     <section>
       <div className="relative h-[50vh] md:h-dvh w-full p-0 md:p-6 md:rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
-        {/* YouTube iframe background */}
+        {/* Streamable iframe background */}
         <div className="absolute inset-0 w-full h-full">
           <iframe
             ref={iframeRef}
-            src="https://www.youtube.com/embed/Eomk8ivqQSA?autoplay=1&loop=1&playlist=Eomk8ivqQSA&controls=0&modestbranding=1&rel=0&playsinline=1&mute=1&enablejsapi=1"
-            className="absolute top-1/2 left-1/2 w-full min-w-full h-full min-h-full -translate-x-1/2 -translate-y-1/2 md:w-[177.78vh] md:h-[56.25vw] pointer-events-none"
-            allow="autoplay; encrypted-media"
+            src={src}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; fullscreen"
             title=""
           />
         </div>
@@ -40,9 +43,6 @@ export default function HeroSection() {
 
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 pointer-events-none" />
-
-        {/* Transparent overlay to block YouTube touch UI (title, controls on mobile) */}
-        <div className="absolute inset-0 z-[5]" />
 
         {/* Mute/Unmute button */}
         <button
