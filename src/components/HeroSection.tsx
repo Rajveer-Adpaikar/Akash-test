@@ -1,38 +1,54 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import InquiryModal from './InquiryModal';
-
-function postToPlayer(ref: React.RefObject<HTMLIFrameElement | null>, func: string) {
-  try {
-    ref.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: [] }),
-      '*'
-    );
-  } catch {}
-}
 
 export default function HeroSection() {
   const [muted, setMuted] = useState(true);
   const [showInquiry, setShowInquiry] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playerRef = useRef<any>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!wrapperRef.current || playerRef.current) return;
+    const iframe = wrapperRef.current.querySelector('iframe');
+    if (!iframe) return;
+    playerRef.current = new (window as any).Vimeo.Player(iframe);
+  }, []);
 
   const toggleMute = useCallback(() => {
-    postToPlayer(iframeRef, muted ? 'unMute' : 'mute');
+    const player = playerRef.current;
+    if (!player) return;
+    if (muted) {
+      player.setVolume(0.7);
+    } else {
+      player.setVolume(0);
+    }
     setMuted((m) => !m);
   }, [muted]);
 
   return (
     <section>
       <div className="relative h-[50vh] md:h-dvh w-full p-0 md:p-6 md:rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
-        {/* YouTube iframe background */}
-        <div className="absolute inset-0 w-full h-full">
-          <iframe
-            ref={iframeRef}
-            src="https://www.youtube.com/embed/Eomk8ivqQSA?autoplay=1&loop=1&playlist=Eomk8ivqQSA&controls=0&modestbranding=1&rel=0&playsinline=1&mute=1&enablejsapi=1"
-            className="absolute top-1/2 left-1/2 w-full min-w-full h-full min-h-full -translate-x-1/2 -translate-y-1/2 md:w-[177.78vh] md:h-[56.25vw] pointer-events-none"
-            allow="autoplay; encrypted-media"
-            title=""
-          />
+        {/* Vimeo iframe background */}
+        <div className="absolute inset-0 w-full h-full" ref={wrapperRef}>
+          <div className="absolute inset-0">
+            <div style={{ padding: '56.25% 0 0 0', height: 0 }}>
+              <iframe
+                src="https://player.vimeo.com/video/1208112257?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1"
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  pointerEvents: 'none',
+                }}
+                title="SAPNA JAHAN - AKASH THE BAND"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Noise overlay */}
