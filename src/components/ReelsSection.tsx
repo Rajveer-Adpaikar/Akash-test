@@ -11,19 +11,13 @@ const REELS = [
   '1208158883',
 ];
 
-function initPlayer(iframe: HTMLIFrameElement): Promise<any> {
-  return new Promise((resolve) => {
-    const player = new (window as any).Vimeo.Player(iframe);
-    player.ready().then(() => resolve(player));
-  });
-}
-
 export default function ReelsSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const playersRef = useRef<Map<string, any>>(new Map());
   const activeIdRef = useRef<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
+  const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
 
   // Init player for an individual reel
   const initOne = useCallback((el: Element) => {
@@ -33,9 +27,10 @@ export default function ReelsSection() {
     const iframe = el.querySelector<HTMLIFrameElement>('iframe');
     if (!iframe || iframe.src.includes('vimeo.com')) return;
     iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`;
-    initPlayer(iframe).then((player) => {
+    const player = new (window as any).Vimeo.Player(iframe);
+    player.ready().then(() => {
       players.set(id, player);
-      // Pause and seek fire in background — player is already usable
+      setReadyIds((prev) => new Set(prev).add(id));
       player.setVolume(0).then(() => player.pause());
       if (id === '1208158886') player.setCurrentTime(1);
     });
@@ -46,11 +41,9 @@ export default function ReelsSection() {
     const section = sectionRef.current;
     if (!section) return;
 
-    // Init first 2 reels right away
     const cards = scrollRef.current?.querySelectorAll('[data-reel-id]');
     cards?.forEach((el, i) => { if (i < 2) initOne(el); });
 
-    // Lazy-load remaining reels when section scrolls into view
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -64,27 +57,35 @@ export default function ReelsSection() {
     return () => obs.disconnect();
   }, [initOne]);
 
-  // Once a reel player is ready, try playing the center one
+  // Reactively play the center reel whenever a new player becomes ready
   useEffect(() => {
     const players = playersRef.current;
-    if (players.size === 0) return;
     const sw = scrollRef.current;
-    if (!sw) return;
-    const cards = sw.querySelectorAll('[data-reel-id]');
-    const anyReady = Array.from(cards).some((el) => players.has(el.getAttribute('data-reel-id') || ''));
-    if (!anyReady) return;
+    if (!sw || players.size === 0) return;
 
-    const first = cards[0];
-    const fid = first?.getAttribute('data-reel-id');
-    if (fid && players.has(fid) && !activeIdRef.current) {
-      const rect = first!.getBoundingClientRect();
-      const sRect = sw.getBoundingClientRect();
-      if (rect.left >= sRect.left && rect.right <= sRect.right) {
-        players.get(fid).play();
-        activeIdRef.current = fid;
+    const cards = sw.querySelectorAll<HTMLElement>('[data-reel-id]');
+    let bestId: string | null = null;
+    let bestDist = Infinity;
+    const swRect = sw.getBoundingClientRect();
+    const swCenter = swRect.left + swRect.width / 2;
+
+    cards.forEach((el) => {
+      const id = el.getAttribute('data-reel-id');
+      if (!id || !players.has(id)) return;
+      const elRect = el.getBoundingClientRect();
+      const elCenter = elRect.left + elRect.width / 2;
+      const dist = Math.abs(swCenter - elCenter);
+      if (dist < bestDist) { bestDist = dist; bestId = id; }
+    });
+
+    if (bestId && bestId !== activeIdRef.current) {
+      if (activeIdRef.current && players.has(activeIdRef.current)) {
+        players.get(activeIdRef.current).pause();
       }
+      players.get(bestId).play();
+      activeIdRef.current = bestId;
     }
-  });
+  }, [readyIds]);
 
   // Scroll-based active detection
   useEffect(() => {
@@ -105,39 +106,20 @@ export default function ReelsSection() {
         const elRect = el.getBoundingClientRect();
         const elCenter = elRect.left + elRect.width / 2;
         const dist = Math.abs(swCenter - elCenter);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestId = id;
-        }
+        if (dist < bestDist) { bestDist = dist; bestId = id; }
       });
 
-      if (bestId && bestId !== activeIdRef.current) {
+      if (bestId && players.has(bestId) && bestId !== activeIdRef.current) {
         if (activeIdRef.current && players.has(activeIdRef.current)) {
           players.get(activeIdRef.current).pause();
         }
-        if (players.has(bestId)) {
-          players.get(bestId).play();
-        }
+        players.get(bestId).play();
         activeIdRef.current = bestId;
       }
     };
 
-    let attempts = 0;
-    const initialCheck = () => {
-      const anyPlayerReady = Array.from(sw.querySelectorAll('[data-reel-id]')).some(
-        (el) => players.has(el.getAttribute('data-reel-id') || '')
-      );
-      if (anyPlayerReady || attempts > 10) {
-        check();
-      } else {
-        attempts++;
-        setTimeout(initialCheck, 300);
-      }
-    };
-    setTimeout(initialCheck, 500);
-
     sw.addEventListener('scroll', check, { passive: true });
-    return () => { sw.removeEventListener('scroll', check); };
+    return () => sw.removeEventListener('scroll', check);
   }, []);
 
   // Listen: when hero unmutes, auto-mute reels
@@ -154,9 +136,7 @@ export default function ReelsSection() {
     setMuted((m) => {
       const next = !m;
       playersRef.current.forEach((p: any) => p.setVolume(next ? 0 : 0.7));
-      if (!next) {
-        window.dispatchEvent(new CustomEvent('mute-hero'));
-      }
+      if (!next) window.dispatchEvent(new CustomEvent('mute-hero'));
       return next;
     });
   }, []);
@@ -182,6 +162,11 @@ export default function ReelsSection() {
                 className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] snap-center rounded-2xl overflow-hidden bg-[#101010]"
               >
                 <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
+                  {!readyIds.has(id) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#181818] rounded-2xl z-10">
+                      <div className="w-6 h-6 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
+                    </div>
+                  )}
                   <iframe
                     className="absolute inset-0 w-full h-full pointer-events-none"
                     allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
