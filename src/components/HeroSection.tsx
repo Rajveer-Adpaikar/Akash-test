@@ -22,8 +22,8 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="h-[50vh] md:h-dvh p-0 md:p-6">
-      <div className="relative h-full w-full md:rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
+    <section>
+      <div className="relative h-[50vh] md:h-dvh w-full p-0 md:p-6 md:rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
         {/* YouTube iframe background */}
         <div className="absolute inset-0 w-full h-full">
           <iframe
@@ -77,40 +77,29 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Hero Content — Description + CTA */}
-        <div className="absolute left-0 right-0 z-10 px-6 sm:px-8 md:px-10 lg:px-12 bottom-6 sm:bottom-8 md:bottom-12 pb-2 sm:pb-2">
-          <div className="grid grid-cols-12 gap-4 items-end">
-            <div className="col-span-12 md:col-span-4 md:col-start-9">
-              <p
-                className="text-white text-xs sm:text-sm md:text-base leading-[1.2] mb-4 sm:mb-6 drop-shadow-md"
-                style={{ animation: 'fadeUp 0.6s 0.5s both' }}
-              >
-                Goa&apos;s premier Bollywood ensemble — a 6-piece band bringing
-                high-energy live performances, romantic covers, and unforgettable
-                entertainment to destination weddings and corporate events across India.
-              </p>
+      </div>
 
-              <button
-                onClick={() => setShowInquiry(true)}
-                className="group inline-flex items-center gap-2 bg-primary rounded-full text-black font-medium text-sm sm:text-base px-5 sm:px-6 py-2 sm:py-2.5 transition-all duration-300 hover:gap-3 shadow-2xl shadow-black/80"
-                style={{ animation: 'fadeUp 0.6s 0.7s both' }}
-              >
-                Inquire Now
-                <span className="bg-black rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                </span>
-              </button>
-            </div>
+      {/* Text + CTA below video */}
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 md:px-10 lg:px-12 py-10 sm:py-14 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed">
+            Goa&apos;s premier Bollywood ensemble — a 6-piece band bringing
+            high-energy live performances, romantic covers, and unforgettable
+            entertainment to destination weddings and corporate events across India.
+          </p>
+          <div className="md:text-right">
+            <button
+              onClick={() => setShowInquiry(true)}
+              className="group inline-flex items-center gap-2 bg-primary rounded-full text-black font-medium text-sm sm:text-base px-5 sm:px-7 py-2.5 sm:py-3 transition-all duration-300 hover:gap-3"
+            >
+              Inquire Now
+              <span className="bg-black rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </span>
+            </button>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
 
       <InquiryModal open={showInquiry} onClose={() => setShowInquiry(false)} />
     </section>
