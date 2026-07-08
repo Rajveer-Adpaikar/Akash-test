@@ -5,4 +5,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: '/akash-the-band/',
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) return 'vendor';
+          if (id.includes('node_modules/framer-motion')) return 'animations';
+        },
+      },
+    },
+  },
 })

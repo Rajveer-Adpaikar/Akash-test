@@ -11,25 +11,55 @@ const REELS = [
   '1208158883',
 ];
 
+function initPlayer(iframe: HTMLIFrameElement): Promise<any> {
+  return new Promise((resolve) => {
+    const player = new (window as any).Vimeo.Player(iframe);
+    player.ready().then(() => resolve(player));
+  });
+}
+
 export default function ReelsSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const playersRef = useRef<Map<string, any>>(new Map());
   const activeIdRef = useRef<string | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
+  const [loaded, setLoaded] = useState(false);
 
-  // Init Vimeo players on mount
+  // Lazy-init players when section enters viewport
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || loaded) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setLoaded(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    obs.observe(section);
+    return () => obs.disconnect();
+  }, [loaded]);
+
+  // Init players (runs once after lazy-load triggers)
+  useEffect(() => {
+    if (!loaded) return;
     const players = playersRef.current;
     const cards = scrollRef.current?.querySelectorAll('[data-reel-id]');
     let readyCount = 0;
     const total = cards?.length || 0;
+
     cards?.forEach((el) => {
       const id = el.getAttribute('data-reel-id');
       if (!id || players.has(id)) return;
       const iframe = el.querySelector('iframe');
       if (!iframe) return;
-      const player = new (window as any).Vimeo.Player(iframe);
-      player.ready().then(() => {
+      // Swap placeholder for real video src
+      iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`;
+
+      initPlayer(iframe).then((player) => {
         player.setVolume(0)
           .then(() => player.pause())
           .then(() => {
@@ -55,7 +85,7 @@ export default function ReelsSection() {
       });
     });
     return () => { players.forEach((p: any) => p.destroy()); players.clear(); };
-  }, []);
+  }, [loaded]);
 
   // Scroll-based active detection
   useEffect(() => {
@@ -83,11 +113,9 @@ export default function ReelsSection() {
       });
 
       if (bestId && bestId !== activeIdRef.current) {
-        // Pause previous
         if (activeIdRef.current && players.has(activeIdRef.current)) {
           players.get(activeIdRef.current).pause();
         }
-        // Play new
         if (players.has(bestId)) {
           players.get(bestId).play();
         }
@@ -95,11 +123,9 @@ export default function ReelsSection() {
       }
     };
 
-    // Initial check with retry if players not ready yet
     let attempts = 0;
     const initialCheck = () => {
-      const allCards = sw.querySelectorAll<HTMLElement>('[data-reel-id]');
-      const anyPlayerReady = Array.from(allCards).some(
+      const anyPlayerReady = Array.from(sw.querySelectorAll('[data-reel-id]')).some(
         (el) => players.has(el.getAttribute('data-reel-id') || '')
       );
       if (anyPlayerReady || attempts > 10) {
@@ -113,7 +139,7 @@ export default function ReelsSection() {
 
     sw.addEventListener('scroll', check, { passive: true });
     return () => { sw.removeEventListener('scroll', check); };
-  }, []);
+  }, [loaded]);
 
   // Listen: when hero unmutes, auto-mute reels
   useEffect(() => {
@@ -130,7 +156,6 @@ export default function ReelsSection() {
       const next = !m;
       playersRef.current.forEach((p: any) => p.setVolume(next ? 0 : 0.7));
       if (!next) {
-        // Reels unmuted → mute hero
         window.dispatchEvent(new CustomEvent('mute-hero'));
       }
       return next;
@@ -138,14 +163,13 @@ export default function ReelsSection() {
   }, []);
 
   return (
-    <section className="bg-black px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20 overflow-hidden" id="reels">
+    <section ref={sectionRef} className="bg-black px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20 overflow-hidden" id="reels">
       <div className="max-w-6xl mx-auto">
         <h2 className="font-display text-primary text-xl sm:text-2xl md:text-3xl text-center mb-2">
           Event Reels
         </h2>
         <p className="text-white/40 text-xs text-center mb-6 sm:mb-8">Swipe to view more →</p>
 
-        {/* Scroll wrapper — centers the grid on desktop */}
         <div className="flex justify-center">
           <div
             ref={scrollRef}
@@ -158,18 +182,11 @@ export default function ReelsSection() {
                 data-reel-id={id}
                 className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] snap-center rounded-2xl overflow-hidden bg-[#101010]"
               >
-                <div style={{ padding: '177.78% 0 0 0', position: 'relative' }}>
+                <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
                   <iframe
-                    src={`https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`}
-                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      pointerEvents: 'none',
-                    }}
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    src={loaded ? `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1` : 'about:blank'}
+                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                     title={`Reel ${i + 1}`}
                   />
                 </div>
@@ -178,7 +195,6 @@ export default function ReelsSection() {
           </div>
         </div>
 
-        {/* Mute/Unmute button */}
         <div className="flex justify-center mt-6">
           <button
             onClick={toggleMute}
