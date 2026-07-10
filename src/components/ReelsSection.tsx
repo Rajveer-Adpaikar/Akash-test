@@ -1,125 +1,156 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const REELS = [
-  '1208158925',
-  '1208158917',
-  '1208158916',
-  '1208158881',
-  '1208158886',
-  '1208158884',
-  '1208158883',
+  { vimeo: '1208158925', instagram: 'https://www.instagram.com/reel/DX9Zme3sYPV/' },
+  { vimeo: '1208158917', instagram: 'https://www.instagram.com/reel/DTzWuQPDDwR/' },
+  { vimeo: '1208158916', instagram: 'https://www.instagram.com/reel/DZC7xYMSejP/' },
+  { vimeo: '1208158881', instagram: 'https://www.instagram.com/reel/DVlh_pwj-PQ/' },
+  { vimeo: '1208158886', instagram: 'https://www.instagram.com/reel/DaVXSECMIhq/' },
+  { vimeo: '1208158884', instagram: 'https://www.instagram.com/reel/DTu73e9jKsg/' },
+  { vimeo: '1208158883', instagram: 'https://www.instagram.com/reel/DTUx2xBDNxD/' },
 ];
+
+const LOAD_RETRIES = 2;
+const READY_TIMEOUT = 10000;
+
+interface PlayerResult {
+  id: string;
+  player: any;
+}
+
+function initReelPlayer(el: Element, retriesLeft = LOAD_RETRIES): Promise<PlayerResult | null> {
+  return new Promise((resolve) => {
+    const id = el.getAttribute('data-reel-id');
+    if (!id) return resolve(null);
+
+    const iframe = el.querySelector<HTMLIFrameElement>('iframe');
+    if (!iframe || iframe.src) return resolve(null);
+
+    iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`;
+
+    let done = false;
+
+    const finish = (err?: boolean) => {
+      if (done) return;
+      done = true;
+      if (err && retriesLeft > 0) {
+        iframe.src = '';
+        setTimeout(() => resolve(initReelPlayer(el, retriesLeft - 1)), 1000);
+      } else if (err) {
+        resolve(null);
+      }
+    };
+
+    const player = new (window as any).Vimeo.Player(iframe);
+    const timer = setTimeout(() => finish(true), READY_TIMEOUT);
+
+    player.ready()
+      .then(() => {
+        clearTimeout(timer);
+        if (done) return;
+        done = true;
+        player.setVolume(0).then(() => player.pause());
+        if (id === '1208158886') player.setCurrentTime(1);
+        resolve({ id, player });
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        finish(true);
+      });
+  });
+}
+
+/** Find the card element for a given array index */
+function cardAtIndex(scrollEl: HTMLElement, index: number): HTMLElement | null {
+  return scrollEl.querySelector<HTMLElement>(`[data-reel-id="${REELS[index]?.vimeo}"]`);
+}
+
+/** Smooth-scroll to center a card at the given index (respecting snap-center) */
+function scrollToIndex(scrollEl: HTMLElement, index: number) {
+  const card = cardAtIndex(scrollEl, index);
+  if (!card) return;
+  // Calculate the scrollLeft that aligns this card's center with the container center
+  const targetLeft = card.offsetLeft + card.offsetWidth / 2 - scrollEl.clientWidth / 2;
+  scrollEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+}
 
 export default function ReelsSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const playersRef = useRef<Map<string, any>>(new Map());
-  const activeIdRef = useRef<string | null>(null);
+  const activeIndexRef = useRef<number>(-1);
+  const hasInitializedRef = useRef(false);
   const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
+  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
+  const [sectionVisible, setSectionVisible] = useState(false);
+  const touchRef = useRef<{ startX: number } | null>(null);
 
-  // Init player for an individual reel
-  const initOne = useCallback((el: Element) => {
+  const startPlayer = useCallback((el: Element) => {
     const players = playersRef.current;
     const id = el.getAttribute('data-reel-id');
     if (!id || players.has(id)) return;
-    const iframe = el.querySelector<HTMLIFrameElement>('iframe');
-    if (!iframe || iframe.src.includes('vimeo.com')) return;
-    iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`;
-    const player = new (window as any).Vimeo.Player(iframe);
-    player.ready().then(() => {
-      players.set(id, player);
-      setReadyIds((prev) => new Set(prev).add(id));
-      player.setVolume(0).then(() => player.pause());
-      if (id === '1208158886') player.setCurrentTime(1);
+    initReelPlayer(el).then((result) => {
+      if (!result) {
+        setFailedIds((prev) => new Set(prev).add(id));
+        return;
+      }
+      players.set(result.id, result.player);
+      setReadyIds((prev) => new Set(prev).add(result.id));
     });
   }, []);
 
-  // On mount: init first 2 reels immediately; lazy-load rest when section is near
+  // Initialize all reels when section becomes visible
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
-
     const cards = scrollRef.current?.querySelectorAll('[data-reel-id]');
-    cards?.forEach((el, i) => { if (i < 2) initOne(el); });
-
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          cards?.forEach((el, i) => { if (i >= 2) initOne(el); });
+          setSectionVisible(true);
+          cards?.forEach((el) => {
+            const check = () => {
+              if ((window as any).Vimeo?.Player) {
+                startPlayer(el);
+              } else {
+                requestAnimationFrame(check);
+              }
+            };
+            check();
+          });
           obs.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { rootMargin: '200px', threshold: 0 }
     );
     obs.observe(section);
     return () => obs.disconnect();
-  }, [initOne]);
+  }, [startPlayer]);
 
-  // Reactively play the center reel whenever a new player becomes ready
+  // Auto-activate first reel when section is visible and card 0's player is ready
   useEffect(() => {
+    if (!sectionVisible || hasInitializedRef.current) return;
     const players = playersRef.current;
     const sw = scrollRef.current;
-    if (!sw || players.size === 0) return;
+    if (!sw || !players.has(REELS[0].vimeo)) return;
 
-    const cards = sw.querySelectorAll<HTMLElement>('[data-reel-id]');
-    let bestId: string | null = null;
-    let bestDist = Infinity;
-    const swRect = sw.getBoundingClientRect();
-    const swCenter = swRect.left + swRect.width / 2;
+    players.get(REELS[0].vimeo).play();
+    activeIndexRef.current = 0;
+    hasInitializedRef.current = true;
+    scrollToIndex(sw, 0);
+  }, [sectionVisible, readyIds]);
 
-    cards.forEach((el) => {
-      const id = el.getAttribute('data-reel-id');
-      if (!id || !players.has(id)) return;
-      const elRect = el.getBoundingClientRect();
-      const elCenter = elRect.left + elRect.width / 2;
-      const dist = Math.abs(swCenter - elCenter);
-      if (dist < bestDist) { bestDist = dist; bestId = id; }
-    });
-
-    if (bestId && bestId !== activeIdRef.current) {
-      if (activeIdRef.current && players.has(activeIdRef.current)) {
-        players.get(activeIdRef.current).pause();
-      }
-      players.get(bestId).play();
-      activeIdRef.current = bestId;
-    }
-  }, [readyIds]);
-
-  // Scroll-based active detection
+  // Block mouse-wheel / trackpad scrolling on the reel track
   useEffect(() => {
     const sw = scrollRef.current;
     if (!sw) return;
-    const players = playersRef.current;
-
-    const check = () => {
-      const cards = sw.querySelectorAll<HTMLElement>('[data-reel-id]');
-      let bestId: string | null = null;
-      let bestDist = Infinity;
-      const swRect = sw.getBoundingClientRect();
-      const swCenter = swRect.left + swRect.width / 2;
-
-      cards.forEach((el) => {
-        const id = el.getAttribute('data-reel-id');
-        if (!id) return;
-        const elRect = el.getBoundingClientRect();
-        const elCenter = elRect.left + elRect.width / 2;
-        const dist = Math.abs(swCenter - elCenter);
-        if (dist < bestDist) { bestDist = dist; bestId = id; }
-      });
-
-      if (bestId && players.has(bestId) && bestId !== activeIdRef.current) {
-        if (activeIdRef.current && players.has(activeIdRef.current)) {
-          players.get(activeIdRef.current).pause();
-        }
-        players.get(bestId).play();
-        activeIdRef.current = bestId;
-      }
+    const handler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) e.preventDefault();
     };
-
-    sw.addEventListener('scroll', check, { passive: true });
-    return () => sw.removeEventListener('scroll', check);
+    sw.addEventListener('wheel', handler, { passive: false });
+    return () => sw.removeEventListener('wheel', handler);
   }, []);
 
   // Listen: when hero unmutes, auto-mute reels
@@ -141,41 +172,125 @@ export default function ReelsSection() {
     });
   }, []);
 
+  // --- Both interaction paths (buttons + touch swipe) use the same ±1 logic ---
+
+  const activateByDelta = useCallback((dir: -1 | 1) => {
+    const sw = scrollRef.current;
+    const players = playersRef.current;
+    if (!sw || players.size === 0) return;
+
+    const cur = activeIndexRef.current;
+    const from = cur >= 0 ? cur : 0;
+    const target = Math.max(0, Math.min(REELS.length - 1, from + dir));
+    if (target === from) return;
+
+    const newId = REELS[target]?.vimeo;
+    if (!newId || !players.has(newId)) return;
+
+    if (from >= 0) {
+      const oldId = REELS[from]?.vimeo;
+      if (oldId && players.has(oldId)) players.get(oldId).pause();
+    }
+    players.get(newId).play();
+    activeIndexRef.current = target;
+    scrollToIndex(sw, target);
+  }, []);
+
+  const scrollLeft = useCallback(() => activateByDelta(-1), [activateByDelta]);
+  const scrollRight = useCallback(() => activateByDelta(1), [activateByDelta]);
+
+  // Touch swipe — same ±1 logic as buttons, no geometry
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    touchRef.current = { startX: e.touches[0].clientX };
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchRef.current) return;
+    const dx = Math.abs(e.touches[0].clientX - touchRef.current.startX);
+    if (dx > 20) e.preventDefault();
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const t = touchRef.current;
+    if (!t) return;
+    const dx = e.changedTouches[0].clientX - t.startX;
+    touchRef.current = null;
+    if (Math.abs(dx) < 30) return;
+    activateByDelta(dx > 0 ? -1 : 1);
+  }, [activateByDelta]);
+
   return (
-    <section ref={sectionRef} className="bg-black px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20 overflow-hidden" id="reels">
+    <section ref={sectionRef} className="bg-black px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20" id="reels">
       <div className="max-w-6xl mx-auto">
-        <h2 className="font-display text-primary text-xl sm:text-2xl md:text-3xl text-center mb-2">
+        <h2 className="font-display text-primary text-xl sm:text-2xl md:text-3xl text-center mb-2" style={{ textWrap: 'balance' }}>
           Event Reels
         </h2>
-        <p className="text-white/40 text-xs text-center mb-6 sm:mb-8">Swipe to view more →</p>
+        <p className="text-white/40 text-xs text-center mb-6 sm:mb-8">Tap arrows or swipe to browse</p>
 
-        <div className="flex justify-center">
+        <div className="relative flex justify-center">
+          {/* Previous button */}
+          <button
+            onClick={scrollLeft}
+            aria-label="Previous reel"
+            className="flex absolute left-0 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-7 h-7 sm:w-9 sm:h-9 -ml-3.5 sm:-ml-5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-white hover:bg-white/25 transition-colors"
+          >
+            <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+          </button>
+
           <div
             ref={scrollRef}
-            className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin max-w-full"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}
+            className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide max-w-full touch-none"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
           >
-            {REELS.map((id, i) => (
-              <div
-                key={id}
-                data-reel-id={id}
-                className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] snap-center rounded-2xl overflow-hidden bg-[#101010]"
-              >
-                <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
-                  {!readyIds.has(id) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#181818] rounded-2xl z-10">
-                      <div className="w-6 h-6 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
-                    </div>
-                  )}
-                  <iframe
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                    title={`Reel ${i + 1}`}
-                  />
+            {REELS.map((r, i) => {
+              const id = r.vimeo;
+              const loaded = readyIds.has(id);
+              const failed = failedIds.has(id);
+              return (
+                <div
+                  key={id}
+                  data-reel-id={id}
+                  className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] snap-center rounded-2xl overflow-hidden bg-[#101010]"
+                >
+                  <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
+                    {!loaded && !failed && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#181818] rounded-2xl z-10">
+                        <div className="w-6 h-6 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
+                      </div>
+                    )}
+                    {failed && (
+                      <a
+                        href={r.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 flex flex-col items-center justify-center bg-[#181818] rounded-2xl z-10 gap-2 p-4 hover:bg-[#222] transition-colors"
+                      >
+                        <AlertTriangle className="w-6 h-6 text-white/30" />
+                        <p className="text-white/30 text-xs text-center">Open in Instagram</p>
+                      </a>
+                    )}
+                    <iframe
+                      className="absolute inset-0 w-full h-full pointer-events-none"
+                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                      title={`Reel ${i + 1}`}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {/* Next button */}
+          <button
+            onClick={scrollRight}
+            aria-label="Next reel"
+            className="flex absolute right-0 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-7 h-7 sm:w-9 sm:h-9 -mr-3.5 sm:-mr-5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-white hover:bg-white/25 transition-colors"
+          >
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+          </button>
         </div>
 
         <div className="flex justify-center mt-6">

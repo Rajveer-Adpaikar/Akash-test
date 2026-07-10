@@ -30,22 +30,29 @@ export default function WordsPullUpMultiStyle({
 
   return (
     <div ref={ref} className={`inline-flex flex-wrap justify-center ${className}`}>
-      {allWords.map((item, i) => (
-        <motion.span
-          key={i}
-          className={`inline-block ${item.className}`}
-          initial={{ y: 20, opacity: 0 }}
-          animate={isInView ? { y: 0, opacity: 1 } : {}}
-          transition={{
-            delay: delay + i * 0.08,
-            duration: 0.5,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-        >
-          {item.word}
-          {i < allWords.length - 1 ? ' ' : ''}
-        </motion.span>
-      ))}
+      {allWords.map((item, i) =>
+        isInView ? (
+          <motion.span
+            key={i}
+            className={`inline-block ${item.className}`}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{
+              delay: delay + i * 0.08,
+              duration: 0.5,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+          >
+            {item.word}
+            {i < allWords.length - 1 ? ' ' : ''}
+          </motion.span>
+        ) : (
+          <span key={i} className={`inline-block ${item.className}`}>
+            {item.word}
+            {i < allWords.length - 1 ? ' ' : ''}
+          </span>
+        )
+      )}
     </div>
   );
 }

@@ -100,10 +100,9 @@ export default function FeaturesSection() {
                 <span className="text-primary font-bold text-lg">♪</span>
               </div>
               <div>
-                <h3 className="text-primary text-sm sm:text-base font-display">
+                <h3 className="text-primary text-sm sm:text-base font-display" style={{ textWrap: 'balance' }}>
                   Live Performances.
                 </h3>
-                <span className="text-gray-500 text-xs">(01)</span>
               </div>
             </div>
 
@@ -130,10 +129,9 @@ export default function FeaturesSection() {
                 <span className="text-primary font-bold text-lg">◆</span>
               </div>
               <div>
-                <h3 className="text-primary text-sm sm:text-base font-display">
+                <h3 className="text-primary text-sm sm:text-base font-display" style={{ textWrap: 'balance' }}>
                   Corporate Events.
                 </h3>
-                <span className="text-gray-500 text-xs">(02)</span>
               </div>
             </div>
 
@@ -160,10 +158,9 @@ export default function FeaturesSection() {
                 <span className="text-primary font-bold text-lg">♥</span>
               </div>
               <div>
-                <h3 className="text-primary text-sm sm:text-base font-display">
+                <h3 className="text-primary text-sm sm:text-base font-display" style={{ textWrap: 'balance' }}>
                   Destination Weddings.
                 </h3>
-                <span className="text-gray-500 text-xs">(03)</span>
               </div>
             </div>
 

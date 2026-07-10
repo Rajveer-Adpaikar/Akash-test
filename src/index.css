@@ -35,6 +35,61 @@ body {
   background-size: 512px 512px;
 }
 
+/* Skip-to-content link — hidden until focused */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  z-index: 100;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  background: #DEDBC8;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid #DEDBC8;
+  outline-offset: 2px;
+}
+
+/* Screen-reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Global focus-visible ring */
+:focus-visible {
+  outline: 2px solid #DEDBC8;
+  outline-offset: 2px;
+}
+
+/* Remove default focus ring for mouse clicks only */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Hide scrollbar visually while keeping container scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }

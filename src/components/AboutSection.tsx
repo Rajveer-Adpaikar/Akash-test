@@ -28,6 +28,7 @@ export default function AboutSection() {
               src={`${import.meta.env.BASE_URL}akash-portrait.jpg?v=2`}
               alt="Akash Mangeshkar"
               className="w-full h-auto rounded-2xl object-cover"
+              loading="lazy"
             />
           </div>
 
@@ -38,11 +39,12 @@ export default function AboutSection() {
               I am Akash Mangeshkar, a playback singer &amp; frontman. I lead Goa's premier Bollywood ensemble for luxury weddings and corporate events.
             </p>
 
-            {/* Body - scroll-animated characters */}
-            <div ref={ref} className="relative max-w-2xl">
+            {/* Body — scroll-reveal with ghost backdrop */}
+            <div ref={ref} className="relative max-w-2xl min-h-[6em]">
               <p
                 className="text-xs sm:text-sm md:text-base text-[#DEDBC8] leading-relaxed text-left"
                 style={{ opacity: 0.2 }}
+                aria-hidden="true"
               >
                 {bodyText}
               </p>
@@ -52,6 +54,31 @@ export default function AboutSection() {
               >
                 {bodyText}
               </motion.p>
+            </div>
+
+            {/* Band lineup */}
+            <div className="mt-8 sm:mt-10">
+              <p className="text-white/60 text-[10px] sm:text-xs uppercase tracking-widest mb-4">The Lineup</p>
+              <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-3">
+                {[
+                  { role: 'Lead Vocals', icon: '🎤' },
+                  { role: 'Female Vocals', icon: '🎤' },
+                  { role: 'Keys', icon: '🎹' },
+                  { role: 'Bass', icon: '🎸' },
+                  { role: 'Lead Guitar', icon: '🎸' },
+                  { role: 'Drums', icon: '🥁' },
+                  { role: 'FOH', icon: '🔊' },
+                  { role: 'Production', icon: '🎛️' },
+                ].map((member) => (
+                  <div
+                    key={member.role}
+                    className="bg-black/40 rounded-xl p-2 sm:p-3 text-center hover:bg-black/60 transition-colors"
+                  >
+                    <span className="text-lg sm:text-xl block mb-1">{member.icon}</span>
+                    <p className="text-[#DEDBC8] text-[10px] sm:text-xs leading-tight">{member.role}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
