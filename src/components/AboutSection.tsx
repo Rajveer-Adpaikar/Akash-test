@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 const bodyText =
-  'Performed with Papon at a Goa concert — 738K views, 31K likes. Our band of 6 seasoned musicians (lead vocals, female vocals, keys, bass, lead guitar, drums) plus professional sound production delivers Bollywood hits, romantic covers, and high-energy live sets that turn every event into an unforgettable experience.';
+  'Performed with Papon at a Goa concert — 738K views, 31K likes. Akash the Band Goa brings together 6 seasoned musicians (lead vocals, female vocals, keys, bass, lead guitar, drums) plus professional sound production to deliver Bollywood hits, romantic covers, and high-energy live sets for destination weddings, corporate events, and private parties across India. As the premier Bollywood band in Goa, every performance is crafted to turn your event into an unforgettable experience.';
 
 export default function AboutSection() {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,7 +26,7 @@ export default function AboutSection() {
           <div className="w-full">
             <img
               src={`${import.meta.env.BASE_URL}akash-portrait.jpg?v=2`}
-              alt="Akash Mangeshkar"
+              alt="Akash Mangeshkar — frontman and lead vocalist of Akash The Band, Goa's premier Bollywood live band"
               className="w-full h-auto rounded-2xl object-cover"
               loading="lazy"
             />

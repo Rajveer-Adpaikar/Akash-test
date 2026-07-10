@@ -75,6 +75,7 @@ export default function FeaturesSection() {
           >
             Live shows · Corporate events · Destination weddings
           </motion.p>
+          <h2 className="sr-only">Bollywood Band Services for Weddings, Corporate Events &amp; Live Performances in Goa</h2>
         </div>
 
         {/* Card Grid */}
@@ -84,7 +85,7 @@ export default function FeaturesSection() {
             <div className="relative flex-1 rounded-xl overflow-hidden min-h-[200px]">
               <img
                 src="/akash-the-band/Group.jpg"
-                alt="Akash The Band group photo"
+                alt="Akash The Band — 6-piece Bollywood ensemble group photo for weddings and corporate events in Goa"
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />

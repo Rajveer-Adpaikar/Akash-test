@@ -15,6 +15,9 @@ export default function FooterSection() {
           <a href="https://instagram.com/akash_theband" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-primary transition-colors">
             Instagram
           </a>
+          <a href="https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-primary transition-colors">
+            Google Reviews
+          </a>
           <a href="tel:+919923837062" className="flex items-center gap-1.5 text-white/60 hover:text-primary transition-colors">
             <Phone className="w-3.5 h-3.5" />
             +91 99238 37062

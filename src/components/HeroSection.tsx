@@ -56,7 +56,7 @@ export default function HeroSection() {
         Skip to main content
       </a>
 
-      <h1 className="sr-only">Akash The Band — Goa's Premier Bollywood Ensemble</h1>
+      <h1 className="sr-only">Akash The Band — Goa's Premier Bollywood Band for Destination Weddings &amp; Corporate Events | Live Bollywood Music India</h1>
 
       <div className="relative h-[30vh] md:h-dvh w-full p-0 md:p-6 md:rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
         {/* Loading spinner — hidden once video loads */}
