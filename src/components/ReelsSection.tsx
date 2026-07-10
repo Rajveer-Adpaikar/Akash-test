@@ -34,7 +34,7 @@ function initReelPlayer(el: Element, retriesLeft = LOAD_RETRIES): Promise<Player
     const iframe = el.querySelector<HTMLIFrameElement>('iframe');
     if (!iframe || iframe.src) return resolve(null);
 
-    iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1`;
+    iframe.src = `https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&loop=1&controls=0&title=0&byline=0&portrait=0&dnt=1&muted=1`;
 
     let done = false;
 
@@ -98,7 +98,8 @@ export default function ReelsSection() {
     const players = playersRef.current;
     const key = el.getAttribute('data-player-key');
     const id = el.getAttribute('data-reel-id');
-    if (!key || !id || players.has(key)) return;
+    const isClone = el.getAttribute('data-clone') === 'true';
+    if (!key || !id || players.has(key) || isClone) return;
     initReelPlayer(el).then((result) => {
       if (!result) {
         setFailedIds((prev) => new Set(prev).add(key));
@@ -143,7 +144,7 @@ export default function ReelsSection() {
           if (i === FIRST_REAL || i === FIRST_REAL + 1 || i === LAST_REAL) return;
           setTimeout(() => {
             waitVimeo(() => startPlayer(el));
-          }, i * 500);
+          }, (i - 1) * 400);
         });
       });
     });
