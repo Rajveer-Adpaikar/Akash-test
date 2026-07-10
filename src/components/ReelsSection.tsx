@@ -84,7 +84,6 @@ export default function ReelsSection() {
   const [muted, setMuted] = useState(true);
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
-  const [sectionVisible, setSectionVisible] = useState(false);
   const touchRef = useRef<{ startX: number } | null>(null);
 
   const startPlayer = useCallback((el: Element) => {
@@ -101,37 +100,43 @@ export default function ReelsSection() {
     });
   }, []);
 
-  // Initialize all reels when section becomes visible
+  // Eagerly init first 2 reels on mount — no waiting for IntersectionObserver
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const cards = scrollRef.current?.querySelectorAll('[data-reel-id]');
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setSectionVisible(true);
-          cards?.forEach((el) => {
-            const check = () => {
-              if ((window as any).Vimeo?.Player) {
-                startPlayer(el);
-              } else {
-                requestAnimationFrame(check);
-              }
-            };
-            check();
-          });
-          obs.disconnect();
+    const sw = scrollRef.current;
+    if (!sw) return;
+    const cards = sw.querySelectorAll<HTMLElement>('[data-reel-id]');
+
+    cards.forEach((el, i) => {
+      if (i >= 2) return;
+      const check = () => {
+        if ((window as any).Vimeo?.Player) {
+          startPlayer(el);
+        } else {
+          requestAnimationFrame(check);
         }
-      },
-      { rootMargin: '200px', threshold: 0 }
-    );
-    obs.observe(section);
-    return () => obs.disconnect();
+      };
+      check();
+    });
+
+    // Stagger init for reels 3-7 to avoid Vimeo channel contention
+    cards.forEach((el, i) => {
+      if (i < 2) return;
+      setTimeout(() => {
+        const checkSDK = () => {
+          if ((window as any).Vimeo?.Player) {
+            startPlayer(el);
+          } else {
+            requestAnimationFrame(checkSDK);
+          }
+        };
+        checkSDK();
+      }, i * 500);
+    });
   }, [startPlayer]);
 
-  // Auto-activate first reel when section is visible and card 0's player is ready
+  // Auto-play first reel as soon as its player is ready
   useEffect(() => {
-    if (!sectionVisible || hasInitializedRef.current) return;
+    if (hasInitializedRef.current) return;
     const players = playersRef.current;
     const sw = scrollRef.current;
     if (!sw || !players.has(REELS[0].vimeo)) return;
@@ -140,7 +145,7 @@ export default function ReelsSection() {
     activeIndexRef.current = 0;
     hasInitializedRef.current = true;
     scrollToIndex(sw, 0);
-  }, [sectionVisible, readyIds]);
+  }, [readyIds]);
 
   // Block mouse-wheel / trackpad scrolling on the reel track
   useEffect(() => {
