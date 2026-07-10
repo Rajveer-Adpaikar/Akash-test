@@ -14,6 +14,12 @@ const REELS = [
 const LOAD_RETRIES = 2;
 const READY_TIMEOUT = 10000;
 
+const NUM_REALS = REELS.length;       // 7
+const CLONE_LAST = 0;
+const FIRST_REAL = 1;
+const LAST_REAL = NUM_REALS;          // 7
+const CLONE_FIRST = NUM_REALS + 1;    // 8
+
 interface PlayerResult {
   id: string;
   player: any;
@@ -61,53 +67,51 @@ function initReelPlayer(el: Element, retriesLeft = LOAD_RETRIES): Promise<Player
   });
 }
 
-/** Find the card element for a given array index */
-function cardAtIndex(scrollEl: HTMLElement, index: number): HTMLElement | null {
-  return scrollEl.querySelector<HTMLElement>(`[data-reel-id="${REELS[index]?.vimeo}"]`);
-}
-
-/** Smooth-scroll to center a card at the given index (respecting snap-center) */
-function scrollToIndex(scrollEl: HTMLElement, index: number) {
-  const card = cardAtIndex(scrollEl, index);
-  if (!card) return;
-  // Calculate the scrollLeft that aligns this card's center with the container center
-  const targetLeft = card.offsetLeft + card.offsetWidth / 2 - scrollEl.clientWidth / 2;
-  scrollEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+/** Build the 9-slot array: [clone-last, real1..real7, clone-first] */
+function buildSlots() {
+  const slots: { key: string; vimeo: string; instagram: string; isClone: boolean }[] = [];
+  // Clone of last
+  slots.push({ key: `${REELS[NUM_REALS - 1].vimeo}-clone-end`, ...REELS[NUM_REALS - 1], isClone: true });
+  // Real reels 1-7
+  for (let i = 0; i < NUM_REALS; i++) {
+    slots.push({ key: REELS[i].vimeo, ...REELS[i], isClone: false });
+  }
+  // Clone of first
+  slots.push({ key: `${REELS[0].vimeo}-clone-start`, ...REELS[0], isClone: true });
+  return slots;
 }
 
 export default function ReelsSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const playersRef = useRef<Map<string, any>>(new Map());
-  const activeIndexRef = useRef<number>(-1);
-  const hasInitializedRef = useRef(false);
+  const activeKeyRef = useRef<string | null>(null);
+  const slotRef = useRef(FIRST_REAL);
+  const transitioningRef = useRef(false);
   const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
-  const touchRef = useRef<{ startX: number } | null>(null);
 
   const startPlayer = useCallback((el: Element) => {
     const players = playersRef.current;
+    const key = el.getAttribute('data-player-key');
     const id = el.getAttribute('data-reel-id');
-    if (!id || players.has(id)) return;
+    if (!key || !id || players.has(key)) return;
     initReelPlayer(el).then((result) => {
       if (!result) {
-        setFailedIds((prev) => new Set(prev).add(id));
+        setFailedIds((prev) => new Set(prev).add(key));
         return;
       }
-      players.set(result.id, result.player);
-      setReadyIds((prev) => new Set(prev).add(result.id));
+      players.set(key, result.player);
+      setReadyIds((prev) => new Set(prev).add(key));
     });
   }, []);
 
-  // Eagerly init first 2 reels on mount — no waiting for IntersectionObserver
+  // Eagerly init first 3 cards (clone-last + real1 + real2) immediately, rest lazy
   useEffect(() => {
-    const sw = scrollRef.current;
-    if (!sw) return;
-    const cards = sw.querySelectorAll<HTMLElement>('[data-reel-id]');
-
-    cards.forEach((el, i) => {
-      if (i >= 2) return;
+    const cards = scrollRef.current?.querySelectorAll<HTMLElement>('[data-player-key]');
+    cards?.forEach((el, i) => {
+      if (i >= 3) return;
       const check = () => {
         if ((window as any).Vimeo?.Player) {
           startPlayer(el);
@@ -118,9 +122,8 @@ export default function ReelsSection() {
       check();
     });
 
-    // Stagger init for reels 3-7 to avoid Vimeo channel contention
-    cards.forEach((el, i) => {
-      if (i < 2) return;
+    cards?.forEach((el, i) => {
+      if (i < 3) return;
       setTimeout(() => {
         const checkSDK = () => {
           if ((window as any).Vimeo?.Player) {
@@ -134,17 +137,22 @@ export default function ReelsSection() {
     });
   }, [startPlayer]);
 
-  // Auto-play first reel as soon as its player is ready
+  // Auto-play slot 1 (first real reel) as soon as its player is ready
   useEffect(() => {
-    if (hasInitializedRef.current) return;
+    if (slotRef.current !== FIRST_REAL) return;
     const players = playersRef.current;
     const sw = scrollRef.current;
-    if (!sw || !players.has(REELS[0].vimeo)) return;
+    const slots = buildSlots();
+    const firstKey = slots[FIRST_REAL].key;
+    if (!sw || !players.has(firstKey)) return;
 
-    players.get(REELS[0].vimeo).play();
-    activeIndexRef.current = 0;
-    hasInitializedRef.current = true;
-    scrollToIndex(sw, 0);
+    players.get(firstKey).play();
+    activeKeyRef.current = firstKey;
+    // Snap to initial position
+    const el = sw.querySelector<HTMLElement>(`[data-player-key="${firstKey}"]`);
+    if (el) {
+      sw.scrollLeft = el.offsetLeft + el.offsetWidth / 2 - sw.clientWidth / 2;
+    }
   }, [readyIds]);
 
   // Block mouse-wheel / trackpad scrolling on the reel track
@@ -177,53 +185,97 @@ export default function ReelsSection() {
     });
   }, []);
 
-  // --- Both interaction paths (buttons + touch swipe) use the same ±1 logic ---
+  // ── Slot-based navigation ──────────────────────────────────
 
-  const activateByDelta = useCallback((dir: -1 | 1) => {
+  const goToSlot = useCallback((slot: number, behavior: ScrollBehavior) => {
     const sw = scrollRef.current;
-    const players = playersRef.current;
-    if (!sw || players.size === 0) return;
-
-    const cur = activeIndexRef.current;
-    const from = cur >= 0 ? cur : 0;
-    const target = Math.max(0, Math.min(REELS.length - 1, from + dir));
-    if (target === from) return;
-
-    const newId = REELS[target]?.vimeo;
-    if (!newId || !players.has(newId)) return;
-
-    if (from >= 0) {
-      const oldId = REELS[from]?.vimeo;
-      if (oldId && players.has(oldId)) players.get(oldId).pause();
-    }
-    players.get(newId).play();
-    activeIndexRef.current = target;
-    scrollToIndex(sw, target);
+    if (!sw) return;
+    const el = sw.querySelector<HTMLElement>(`[data-player-key="${buildSlots()[slot].key}"]`);
+    if (!el) return;
+    const targetLeft = el.offsetLeft + el.offsetWidth / 2 - sw.clientWidth / 2;
+    sw.scrollTo({ left: targetLeft, behavior });
   }, []);
 
-  const scrollLeft = useCallback(() => activateByDelta(-1), [activateByDelta]);
-  const scrollRight = useCallback(() => activateByDelta(1), [activateByDelta]);
+  const navigate = useCallback((dir: -1 | 1) => {
+    if (transitioningRef.current) return;
+    transitioningRef.current = true;
 
-  // Touch swipe — same ±1 logic as buttons, no geometry
+    const nextSlot = Math.max(CLONE_LAST, Math.min(CLONE_FIRST, slotRef.current + dir));
+    if (nextSlot === slotRef.current) {
+      transitioningRef.current = false;
+      return;
+    }
+
+    slotRef.current = nextSlot;
+    const slots = buildSlots();
+    goToSlot(nextSlot, 'smooth');
+
+    const done = () => {
+      const s = slotRef.current;
+
+      if (s === CLONE_LAST || s === CLONE_FIRST) {
+        // Phase 1 complete — user saw smooth slide onto clone
+        // Phase 2 — instant snap to real counterpart
+        const realSlot = s === CLONE_LAST ? LAST_REAL : FIRST_REAL;
+
+        // Pause clone (was visible during phase 1)
+        playersRef.current.get(slots[s].key)?.pause();
+
+        // Instant snap — visually identical
+        goToSlot(realSlot, 'auto');
+        slotRef.current = realSlot;
+
+        // Hand off playback to real card
+        const realKey = slots[realSlot].key;
+        if (activeKeyRef.current && playersRef.current.has(activeKeyRef.current)) {
+          playersRef.current.get(activeKeyRef.current)?.pause();
+        }
+        playersRef.current.get(realKey)?.play();
+        activeKeyRef.current = realKey;
+      } else {
+        // Normal move
+        const key = slots[s].key;
+        const player = playersRef.current.get(key);
+        if (player && key !== activeKeyRef.current) {
+          if (activeKeyRef.current && playersRef.current.has(activeKeyRef.current)) {
+            playersRef.current.get(activeKeyRef.current)?.pause();
+          }
+          player.play();
+          activeKeyRef.current = key;
+        }
+      }
+      transitioningRef.current = false;
+    };
+
+    const sw = scrollRef.current;
+    if (sw && 'onscrollend' in window) {
+      sw.addEventListener('scrollend', done, { once: true });
+    } else {
+      setTimeout(done, 400);
+    }
+  }, [goToSlot]);
+
+  const scrollLeft = useCallback(() => navigate(-1), [navigate]);
+  const scrollRight = useCallback(() => navigate(1), [navigate]);
+
+  // Touch swipe — same ±1 logic as buttons
+  const touchStartX = useRef(0);
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
-    touchRef.current = { startX: e.touches[0].clientX };
+    touchStartX.current = e.touches[0].clientX;
   }, []);
-
   const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchRef.current) return;
-    const dx = Math.abs(e.touches[0].clientX - touchRef.current.startX);
+    const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
     if (dx > 20) e.preventDefault();
   }, []);
-
   const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    const t = touchRef.current;
-    if (!t) return;
-    const dx = e.changedTouches[0].clientX - t.startX;
-    touchRef.current = null;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
     if (Math.abs(dx) < 30) return;
-    activateByDelta(dx > 0 ? -1 : 1);
-  }, [activateByDelta]);
+    navigate(dx > 0 ? -1 : 1);
+  }, [navigate]);
+
+  // ── Render ─────────────────────────────────────────────────
+  const slots = buildSlots();
 
   return (
     <section ref={sectionRef} className="bg-black px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20" id="reels">
@@ -234,7 +286,6 @@ export default function ReelsSection() {
         <p className="text-white/40 text-xs text-center mb-6 sm:mb-8">Tap arrows or swipe to browse</p>
 
         <div className="relative flex justify-center">
-          {/* Previous button */}
           <button
             onClick={scrollLeft}
             aria-label="Previous reel"
@@ -245,20 +296,22 @@ export default function ReelsSection() {
 
           <div
             ref={scrollRef}
-            className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide max-w-full touch-none"
+            className="flex gap-3 sm:gap-4 overflow-x-hidden pb-4 max-w-full touch-none"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
+            style={{ scrollbarWidth: 'none' }}
           >
-            {REELS.map((r, i) => {
-              const id = r.vimeo;
-              const loaded = readyIds.has(id);
-              const failed = failedIds.has(id);
+            {slots.map((s) => {
+              const loaded = readyIds.has(s.key);
+              const failed = failedIds.has(s.key);
               return (
                 <div
-                  key={id}
-                  data-reel-id={id}
-                  className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] snap-center rounded-2xl overflow-hidden bg-[#101010]"
+                  key={s.key}
+                  data-player-key={s.key}
+                  data-reel-id={s.vimeo}
+                  data-clone={s.isClone ? 'true' : undefined}
+                  className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] rounded-2xl overflow-hidden bg-[#101010]"
                 >
                   <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
                     {!loaded && !failed && (
@@ -268,7 +321,7 @@ export default function ReelsSection() {
                     )}
                     {failed && (
                       <a
-                        href={r.instagram}
+                        href={s.instagram}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="absolute inset-0 flex flex-col items-center justify-center bg-[#181818] rounded-2xl z-10 gap-2 p-4 hover:bg-[#222] transition-colors"
@@ -280,7 +333,7 @@ export default function ReelsSection() {
                     <iframe
                       className="absolute inset-0 w-full h-full pointer-events-none"
                       allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                      title={`Reel ${i + 1}`}
+                      title={`Reel ${s.key}`}
                     />
                   </div>
                 </div>
@@ -288,7 +341,6 @@ export default function ReelsSection() {
             })}
           </div>
 
-          {/* Next button */}
           <button
             onClick={scrollRight}
             aria-label="Next reel"
