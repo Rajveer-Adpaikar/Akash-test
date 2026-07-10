@@ -5,6 +5,7 @@ import InquiryModal from './InquiryModal';
 export default function HeroSection() {
   const [muted, setMuted] = useState(true);
   const [showInquiry, setShowInquiry] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const playerRef = useRef<any>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -13,7 +14,12 @@ export default function HeroSection() {
     const iframe = wrapperRef.current.querySelector('iframe');
     if (!iframe) return;
     const player = new (window as any).Vimeo.Player(iframe);
-    player.ready().then(() => player.setCurrentTime(1));
+    player.ready().then(() => {
+      player.setCurrentTime(1);
+      // Fade in video, hide spinner
+      setVideoReady(true);
+      if (wrapperRef.current) wrapperRef.current.classList.remove('opacity-0');
+    });
     playerRef.current = player;
   }, []);
 
@@ -44,11 +50,24 @@ export default function HeroSection() {
   }, [muted]);
 
   return (
-    <section>
+    <section id="hero">
+      {/* Skip to content link — first focusable element */}
+      <a href="#about" className="skip-link">
+        Skip to main content
+      </a>
+
+      <h1 className="sr-only">Akash The Band — Goa's Premier Bollywood Ensemble</h1>
+
       <div className="relative h-[30vh] md:h-dvh w-full p-0 md:p-6 md:rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
+        {/* Loading spinner — hidden once video loads */}
+        {!videoReady && (
+          <div className="absolute inset-0 z-[2] flex items-center justify-center" aria-hidden="true">
+            <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          </div>
+        )}
+
         {/* Vimeo iframe background */}
-        <div className="absolute inset-0 w-full h-full" ref={wrapperRef}>
-          <div className="absolute inset-0">
+        <div className="absolute inset-0 w-full h-full opacity-0 transition-opacity duration-500" ref={wrapperRef}>
             <div style={{ padding: '56.25% 0 0 0', height: 0 }}>
               <iframe
                 src="https://player.vimeo.com/video/1208327096?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&loop=1&controls=0&title=0&byline=0&portrait=0&background=1"
@@ -66,7 +85,6 @@ export default function HeroSection() {
               />
             </div>
           </div>
-        </div>
 
         {/* Noise overlay */}
         <div className="noise-overlay" />
@@ -87,7 +105,7 @@ export default function HeroSection() {
         </button>
 
         {/* Navbar */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
+        <nav aria-label="Main navigation" className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
           <div className="bg-black rounded-b-2xl md:rounded-b-3xl px-4 py-2 md:px-8">
             <div className="flex items-center gap-3 sm:gap-6 md:gap-12 lg:gap-14">
               {[
@@ -100,12 +118,8 @@ export default function HeroSection() {
                   <a
                     key={item.label}
                     href={item.href}
-                    className="text-[10px] sm:text-xs md:text-sm whitespace-nowrap transition-colors duration-200"
-                    style={{ color: 'rgba(225, 224, 204, 0.8)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#E1E0CC')}
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = 'rgba(225, 224, 204, 0.8)')
-                    }
+                    aria-label={`${item.label} section`}
+                    className="nav-link text-[10px] sm:text-xs md:text-sm whitespace-nowrap transition-colors duration-200 text-[#E1E0CC] hover:text-white"
                   >
                     {item.label}
                   </a>
@@ -113,7 +127,7 @@ export default function HeroSection() {
               )}
             </div>
           </div>
-        </div>
+        </nav>
 
         {/* Text + CTA on video — desktop only */}
         <div className="hidden md:block absolute left-0 right-0 z-10 px-6 sm:px-8 md:px-10 lg:px-12 bottom-6 sm:bottom-8 md:bottom-12 pb-2 sm:pb-2">

@@ -8,7 +8,6 @@ export default {
       },
       fontFamily: {
         display: ['"Playfair Display"', 'serif'],
-        accent: ['"Cormorant Garamond"', 'serif'],
         body: ['Almarai', 'sans-serif'],
       },
     },
