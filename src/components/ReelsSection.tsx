@@ -20,6 +20,7 @@ const FIRST_REAL = 1;
 const LAST_REAL = NUM_REALS;          // 7
 const CLONE_FIRST = NUM_REALS + 1;    // 8
 const SNAP_MS = 350;
+const EAGER_SLOTS = new Set([CLONE_LAST, FIRST_REAL, FIRST_REAL + 1, LAST_REAL]);
 
 interface PlayerResult {
   id: string;
@@ -87,6 +88,7 @@ export default function ReelsSection() {
   const slotRef = useRef(FIRST_REAL);
   const movingRef = useRef(false);
   const touchStartX = useRef(0);
+  const seenRef = useRef(false);
   const [muted, setMuted] = useState(true);
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
@@ -108,10 +110,11 @@ export default function ReelsSection() {
     });
   }, []);
 
+  // Eagerly init reels 1, 2, 7 (and the clone-of-last) on mount
   useEffect(() => {
     const cards = outerRef.current?.querySelectorAll<HTMLElement>('[data-player-key]');
     cards?.forEach((el, i) => {
-      if (i >= 3) return;
+      if (!EAGER_SLOTS.has(i)) return;
       const check = () => {
         if ((window as any).Vimeo?.Player) {
           startPlayer(el);
@@ -123,7 +126,7 @@ export default function ReelsSection() {
     });
 
     cards?.forEach((el, i) => {
-      if (i < 3) return;
+      if (EAGER_SLOTS.has(i)) return;
       setTimeout(() => {
         const checkSDK = () => {
           if ((window as any).Vimeo?.Player) {
@@ -172,13 +175,27 @@ export default function ReelsSection() {
     return () => clearTimeout(t);
   }, [snap]);
 
-  // Auto-play slot 1 when Vimeo ready
+  // Auto-play slot 1 when the section scrolls into view (once)
   useEffect(() => {
+    const section = sectionRef.current;
     const firstKey = buildSlots()[FIRST_REAL].key;
-    const player = playersRef.current.get(firstKey);
-    if (!player || activeKeyRef.current) return;
-    player.play();
-    activeKeyRef.current = firstKey;
+    if (!section || seenRef.current) return;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !seenRef.current) {
+          seenRef.current = true;
+          const player = playersRef.current.get(firstKey);
+          if (!player) return;
+          player.play();
+          activeKeyRef.current = firstKey;
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(section);
+    return () => obs.disconnect();
   }, [readyIds]);
 
   // Mute reels when hero unmutes
