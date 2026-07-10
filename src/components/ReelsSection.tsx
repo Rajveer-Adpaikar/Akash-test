@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { Volume2, VolumeX, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const REELS = [
-  { vimeo: '1208819326', instagram: 'https://www.instagram.com/reel/DX9Zme3sYPV/' },
+  { vimeo: '1208819326' },
   { vimeo: '1208158917', instagram: 'https://www.instagram.com/reel/DTzWuQPDDwR/' },
   { vimeo: '1208158916', instagram: 'https://www.instagram.com/reel/DZC7xYMSejP/' },
   { vimeo: '1208158881', instagram: 'https://www.instagram.com/reel/DVlh_pwj-PQ/' },
@@ -70,7 +70,7 @@ function initReelPlayer(el: Element, retriesLeft = LOAD_RETRIES): Promise<Player
 }
 
 function buildSlots() {
-  const slots: { key: string; vimeo: string; instagram: string; isClone: boolean }[] = [];
+  const slots: { key: string; vimeo: string; instagram?: string; isClone: boolean }[] = [];
   slots.push({ key: `${REELS[NUM_REALS - 1].vimeo}-clone-end`, ...REELS[NUM_REALS - 1], isClone: true });
   for (let i = 0; i < NUM_REALS; i++) {
     slots.push({ key: REELS[i].vimeo, ...REELS[i], isClone: false });
@@ -331,7 +331,7 @@ export default function ReelsSection() {
                         <div className="w-6 h-6 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
                       </div>
                     )}
-                    {failed && (
+                    {failed && s.instagram && (
                       <a
                         href={s.instagram}
                         target="_blank"
