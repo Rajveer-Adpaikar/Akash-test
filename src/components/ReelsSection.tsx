@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const REELS = [
   '1208158925',
@@ -18,6 +18,27 @@ export default function ReelsSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
+
+  const scrollTo = useCallback((dir: 'prev' | 'next') => {
+    const sw = scrollRef.current;
+    if (!sw) return;
+    const cards = sw.querySelectorAll<HTMLElement>('[data-reel-id]');
+    if (!cards.length) return;
+    const swRect = sw.getBoundingClientRect();
+    const swCenter = swRect.left + swRect.width / 2;
+    // Find which card is currently at center
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    cards.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      const d = Math.abs(swCenter - (r.left + r.width / 2));
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    });
+    const target = dir === 'next'
+      ? Math.min(bestIdx + 1, cards.length - 1)
+      : Math.max(bestIdx - 1, 0);
+    cards[target].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, []);
 
   // Init player for an individual reel
   const initOne = useCallback((el: Element) => {
@@ -149,7 +170,16 @@ export default function ReelsSection() {
         </h2>
         <p className="text-white/40 text-xs text-center mb-6 sm:mb-8">Swipe to view more →</p>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center relative">
+          {/* Left arrow — desktop only */}
+          <button
+            onClick={() => scrollTo('prev')}
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm items-center justify-center transition-all duration-200 -ml-5"
+            aria-label="Previous reel"
+          >
+            <ChevronLeft className="w-5 h-5 text-white/70" />
+          </button>
+
           <div
             ref={scrollRef}
             className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin max-w-full"
@@ -176,6 +206,15 @@ export default function ReelsSection() {
               </div>
             ))}
           </div>
+
+          {/* Right arrow — desktop only */}
+          <button
+            onClick={() => scrollTo('next')}
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm items-center justify-center transition-all duration-200 -mr-5"
+            aria-label="Next reel"
+          >
+            <ChevronRight className="w-5 h-5 text-white/70" />
+          </button>
         </div>
 
         <div className="flex justify-center mt-6">

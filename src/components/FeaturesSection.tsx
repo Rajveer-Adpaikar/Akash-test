@@ -1,19 +1,7 @@
 import { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check, ArrowRight } from 'lucide-react';
-import WordsPullUpMultiStyle from './WordsPullUpMultiStyle';
 import InquiryModal from './InquiryModal';
-
-const headerSegments = [
-  {
-    text: 'Premium entertainment for extraordinary events.',
-    className: 'text-primary',
-  },
-  {
-    text: 'Bollywood hits. Live energy. Unforgettable nights.',
-    className: 'text-white/50',
-  },
-];
 
 interface FeatureCardProps {
   index: number;
@@ -52,8 +40,8 @@ function CheckItem({ text }: { text: string }) {
 
 export default function FeaturesSection() {
   const headerRef = useRef<HTMLDivElement>(null);
+  const isHeaderInView = useInView(headerRef, { once: true, margin: '-50px' });
   const [showInquiry, setShowInquiry] = useState(false);
-  useInView(headerRef, { once: true, margin: '-50px' });
 
   return (
     <section className="min-h-screen bg-black relative px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-28" id="services">
@@ -63,11 +51,30 @@ export default function FeaturesSection() {
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
         <div ref={headerRef} className="text-center mb-8 sm:mb-10 md:mb-12">
-          <WordsPullUpMultiStyle
-            segments={headerSegments}
-            className="text-xl sm:text-2xl md:text-3xl lg:text-4xl"
-            delay={0.1}
-          />
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="text-white/30 text-[10px] sm:text-xs uppercase tracking-[0.2em] mb-3 sm:mb-4"
+          >
+            What we do
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="font-display italic text-primary text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-[1.15]"
+          >
+            Your event. Our stage.
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="text-white/40 text-xs sm:text-sm mt-3 sm:mt-4"
+          >
+            Live shows · Corporate events · Destination weddings
+          </motion.p>
         </div>
 
         {/* Card Grid */}
