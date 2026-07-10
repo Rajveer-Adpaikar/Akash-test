@@ -1,4 +1,4 @@
-import { Phone, Mail, Music2 } from 'lucide-react';
+import { Phone, Mail, Music2, MessageCircle } from 'lucide-react';
 
 export default function FooterSection() {
   return (
@@ -15,8 +15,9 @@ export default function FooterSection() {
           <a href="https://instagram.com/akash_theband" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-primary transition-colors">
             Instagram
           </a>
-          <a href="https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-primary transition-colors">
-            Google Reviews
+          <a href="https://wa.me/919923837062" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white/60 hover:text-primary transition-colors">
+            <MessageCircle className="w-3.5 h-3.5" />
+            WhatsApp
           </a>
           <a href="tel:+919923837062" className="flex items-center gap-1.5 text-white/60 hover:text-primary transition-colors">
             <Phone className="w-3.5 h-3.5" />

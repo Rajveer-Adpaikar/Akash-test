@@ -90,6 +90,14 @@ body {
   display: none;
 }
 
+/* Floating CTA padding so footer isn't hidden behind it */
+body {
+  padding-bottom: 72px;
+}
+@media (min-width: 768px) {
+  body { padding-bottom: 0; }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }

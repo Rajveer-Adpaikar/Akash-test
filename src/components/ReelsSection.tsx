@@ -1,14 +1,20 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Volume2, VolumeX, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const REELS = [
-  { vimeo: '1208819326' },
-  { vimeo: '1208158917', instagram: 'https://www.instagram.com/reel/DTzWuQPDDwR/' },
-  { vimeo: '1208158916', instagram: 'https://www.instagram.com/reel/DZC7xYMSejP/' },
-  { vimeo: '1208158881', instagram: 'https://www.instagram.com/reel/DVlh_pwj-PQ/' },
-  { vimeo: '1208158886', instagram: 'https://www.instagram.com/reel/DaVXSECMIhq/' },
-  { vimeo: '1208819325' },
-  { vimeo: '1208819327' },
+interface ReelData {
+  vimeo: string;
+  instagram?: string;
+  caption?: string;
+}
+
+const REELS: ReelData[] = [
+  { vimeo: '1208819326', caption: 'Latest performance highlight' },
+  { vimeo: '1208158917', instagram: 'https://www.instagram.com/reel/DTzWuQPDDwR/', caption: 'Live at a Goa destination wedding' },
+  { vimeo: '1208158916', instagram: 'https://www.instagram.com/reel/DZC7xYMSejP/', caption: 'High-energy Bollywood set' },
+  { vimeo: '1208158881', instagram: 'https://www.instagram.com/reel/DVlh_pwj-PQ/', caption: 'Corporate event performance' },
+  { vimeo: '1208158886', instagram: 'https://www.instagram.com/reel/DaVXSECMIhq/', caption: 'Wedding sangeet highlights' },
+  { vimeo: '1208819325', caption: 'Romantic Bollywood cover' },
+  { vimeo: '1208819327', caption: 'Party anthem live medley' },
 ];
 
 const LOAD_RETRIES = 2;
@@ -69,7 +75,7 @@ function initReelPlayer(el: Element, retriesLeft = LOAD_RETRIES): Promise<Player
 }
 
 function buildSlots() {
-  const slots: { key: string; vimeo: string; instagram?: string; isClone: boolean }[] = [];
+  const slots: { key: string; vimeo: string; instagram?: string; caption?: string; isClone: boolean }[] = [];
   slots.push({ key: `${REELS[NUM_REALS - 1].vimeo}-clone-end`, ...REELS[NUM_REALS - 1], isClone: true });
   for (let i = 0; i < NUM_REALS; i++) {
     slots.push({ key: REELS[i].vimeo, ...REELS[i], isClone: false });
@@ -355,9 +361,14 @@ export default function ReelsSection() {
                     <iframe
                       className="absolute inset-0 w-full h-full pointer-events-none"
                       allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                      title={`Reel ${s.key}`}
+                      title={s.caption || `Reel ${s.key}`}
                     />
                   </div>
+                  {s.caption && !s.isClone && (
+                    <p className="text-white/50 text-[10px] sm:text-xs text-center py-2 px-2 truncate">
+                      {s.caption}
+                    </p>
+                  )}
                 </div>
               );
             })}
