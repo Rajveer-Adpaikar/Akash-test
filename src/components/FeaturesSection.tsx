@@ -79,22 +79,15 @@ export default function FeaturesSection() {
 
         {/* Card Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:h-[480px] gap-3 sm:gap-2 md:gap-1">
-          {/* Card 1 - Video */}
+          {/* Card 1 - Group Photo */}
           <FeatureCard index={0}>
             <div className="relative flex-1 rounded-xl overflow-hidden min-h-[200px]">
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="none"
+              <img
+                src="/akash-the-band/Group.jpg"
+                alt="Akash The Band group photo"
+                loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
-              >
-                <source
-                  src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260406_133058_0504132a-0cf3-4450-a370-8ea3b05c95d4.mp4"
-                  type="video/mp4"
-                />
-              </video>
+              />
             </div>
             <p className="text-[#E1E0CC] text-xs sm:text-sm mt-3 font-display font-medium">
               The Akash Experience
