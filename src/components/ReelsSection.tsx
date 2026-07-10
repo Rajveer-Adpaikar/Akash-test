@@ -92,6 +92,8 @@ export default function ReelsSection() {
   const activeKeyRef = useRef<string | null>(null);
   const slotRef = useRef(FIRST_REAL);
   const movingRef = useRef(false);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
   const seenRef = useRef(false);
   const [muted, setMuted] = useState(true);
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
@@ -283,6 +285,25 @@ export default function ReelsSection() {
   const scrollLeft = useCallback(() => navigate(-1), [navigate]);
   const scrollRight = useCallback(() => navigate(1), [navigate]);
 
+  // ── Touch swipe ────────────────────────────────────────────
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+    // Only block scroll when horizontal movement clearly dominates
+    if (dx > dy && dx > 20) e.preventDefault();
+  }, []);
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) < 30) return;
+    navigate(dx > 0 ? -1 : 1);
+  }, [navigate]);
+
   // ── Render ─────────────────────────────────────────────────
 
   const slots = buildSlots();
@@ -293,15 +314,15 @@ export default function ReelsSection() {
         <h2 className="font-display text-primary text-xl sm:text-2xl md:text-3xl text-center mb-2" style={{ textWrap: 'balance' }}>
           Event Reels
         </h2>
-        <p className="text-white/40 text-xs text-center mb-6 sm:mb-8">Tap arrows to browse</p>
+        <p className="text-white/40 text-xs text-center mb-6 sm:mb-8">Tap arrows or swipe to browse</p>
 
         <div className="relative flex justify-center">
           <button
             onClick={scrollLeft}
             aria-label="Previous reel"
-            className="flex absolute left-0 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-7 h-7 sm:w-9 sm:h-9 -ml-3.5 sm:-ml-5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-white hover:bg-white/25 transition-colors"
+            className="flex absolute left-0 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-11 h-11 -ml-0.5 sm:-ml-5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-white hover:bg-white/25 transition-colors"
           >
-            <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
           <div ref={outerRef} className="overflow-hidden max-w-full w-full">
@@ -309,6 +330,9 @@ export default function ReelsSection() {
               ref={trayRef}
               className="flex gap-3 sm:gap-4"
               style={{ willChange: 'transform' }}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
             >
             {slots.map((s) => {
               const loaded = readyIds.has(s.key);
@@ -358,9 +382,9 @@ export default function ReelsSection() {
           <button
             onClick={scrollRight}
             aria-label="Next reel"
-            className="flex absolute right-0 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-7 h-7 sm:w-9 sm:h-9 -mr-3.5 sm:-mr-5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-white hover:bg-white/25 transition-colors"
+            className="flex absolute right-0 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-11 h-11 -mr-0.5 sm:-mr-5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-white hover:bg-white/25 transition-colors"
           >
-            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
 

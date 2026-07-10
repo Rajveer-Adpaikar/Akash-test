@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Props {
@@ -38,6 +38,15 @@ export default function InquiryModal({ open, onClose }: Props) {
     setErrors({});
     setForm({ name: '', phone: '', email: '', message: '' });
   };
+
+  // Auto-focus first input on open + handle Escape at document level
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +99,7 @@ export default function InquiryModal({ open, onClose }: Props) {
     `w-full bg-black/60 border ${errors[field] ? 'border-red-500/60' : 'border-white/10'} rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label="Inquiry form" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-[#101010] rounded-2xl p-6 sm:p-8 w-full max-w-md relative" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-4 right-4 text-white/60 hover:text-white">
           <X className="w-5 h-5" />
