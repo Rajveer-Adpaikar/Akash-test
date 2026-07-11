@@ -6,21 +6,29 @@ export default function HeroSection() {
   const [muted, setMuted] = useState(true);
   const [showInquiry, setShowInquiry] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<VimeoPlayer | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!wrapperRef.current || playerRef.current) return;
     const iframe = wrapperRef.current.querySelector('iframe');
     if (!iframe) return;
-    const player = new (window as any).Vimeo.Player(iframe);
-    player.ready().then(() => {
-      player.setCurrentTime(1);
-      // Fade in video, hide spinner
-      setVideoReady(true);
-      if (wrapperRef.current) wrapperRef.current.classList.remove('opacity-0');
+
+    const waitVimeo = (fn: () => void) => {
+      if (window.Vimeo?.Player) fn();
+      else requestAnimationFrame(() => waitVimeo(fn));
+    };
+
+    waitVimeo(() => {
+      const player = new window.Vimeo!.Player(iframe);
+      player.ready().then(() => {
+        player.setCurrentTime(1);
+        // Fade in video, hide spinner
+        setVideoReady(true);
+        if (wrapperRef.current) wrapperRef.current.classList.remove('opacity-0');
+      });
+      playerRef.current = player;
     });
-    playerRef.current = player;
   }, []);
 
   // Listen: when reels unmute, auto-mute hero
@@ -31,8 +39,8 @@ export default function HeroSection() {
       player.setVolume(0);
       setMuted(true);
     };
-    window.addEventListener('mute-hero' as any, handler as any);
-    return () => window.removeEventListener('mute-hero' as any, handler as any);
+    window.addEventListener('mute-hero', handler);
+    return () => window.removeEventListener('mute-hero', handler);
   }, []);
 
   const toggleMute = useCallback(() => {

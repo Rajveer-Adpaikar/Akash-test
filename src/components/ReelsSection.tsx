@@ -27,7 +27,7 @@ const SNAP_MS = 350;
 
 interface PlayerResult {
   id: string;
-  player: any;
+  player: VimeoPlayer;
 }
 
 function initReelPlayer(el: Element, retriesLeft = LOAD_RETRIES): Promise<PlayerResult | null> {
@@ -53,7 +53,7 @@ function initReelPlayer(el: Element, retriesLeft = LOAD_RETRIES): Promise<Player
       }
     };
 
-    const player = new (window as any).Vimeo.Player(iframe);
+    const player = new window.Vimeo!.Player(iframe);
     const timer = setTimeout(() => finish(true), READY_TIMEOUT);
 
     player.ready()
@@ -86,7 +86,7 @@ export default function ReelsSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const outerRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
-  const playersRef = useRef<Map<string, any>>(new Map());
+  const playersRef = useRef<Map<string, VimeoPlayer>>(new Map());
   const activeKeyRef = useRef<string | null>(null);
   const slotRef = useRef(FIRST_REAL);
   const movingRef = useRef(false);
@@ -121,7 +121,7 @@ export default function ReelsSection() {
     if (!cards || !cards[FIRST_REAL]) return;
 
     const waitVimeo = (fn: () => void) => {
-      if ((window as any).Vimeo?.Player) fn();
+      if (window.Vimeo?.Player) fn();
       else requestAnimationFrame(() => waitVimeo(fn));
     };
 
@@ -190,13 +190,16 @@ export default function ReelsSection() {
     return () => clearTimeout(t);
   }, [snap]);
 
-  // Auto-play slot 1 when the section scrolls into view (once)
+  // Auto-play slot 1 when the section scrolls into view (once, with retry)
   useEffect(() => {
     const section = sectionRef.current;
     const firstKey = buildSlots()[FIRST_REAL].key;
     if (!section || seenRef.current) return;
 
-    const tryPlay = () => {
+    let retries = 0;
+    const MAX_RETRIES = 10;
+
+    const tryPlay = (): boolean => {
       const player = playersRef.current.get(firstKey);
       if (!player) return false;
       player.setVolume(muted ? 0 : 0.7);
@@ -208,9 +211,18 @@ export default function ReelsSection() {
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !seenRef.current) {
-          if (!tryPlay()) return;
-          seenRef.current = true;
-          obs.disconnect();
+          if (tryPlay()) {
+            seenRef.current = true;
+            obs.disconnect();
+          } else if (retries < MAX_RETRIES) {
+            retries++;
+            setTimeout(() => {
+              if (entry.isIntersecting && !seenRef.current && tryPlay()) {
+                seenRef.current = true;
+                obs.disconnect();
+              }
+            }, retries * 300);
+          }
         }
       },
       { threshold: 0.3 }
@@ -222,17 +234,17 @@ export default function ReelsSection() {
   // Mute reels when hero unmutes
   useEffect(() => {
     const handler = () => {
-      playersRef.current.forEach((p: any) => p.setVolume(0));
+      playersRef.current.forEach((p) => p.setVolume(0));
       setMuted(true);
     };
-    window.addEventListener('mute-reels' as any, handler as any);
-    return () => window.removeEventListener('mute-reels' as any, handler as any);
+    window.addEventListener('mute-reels', handler);
+    return () => window.removeEventListener('mute-reels', handler);
   }, []);
 
   const toggleMute = useCallback(() => {
     setMuted((m) => {
       const next = !m;
-      playersRef.current.forEach((p: any) => p.setVolume(next ? 0 : 0.7));
+      playersRef.current.forEach((p) => p.setVolume(next ? 0 : 0.7));
       if (!next) window.dispatchEvent(new CustomEvent('mute-hero'));
       return next;
     });
