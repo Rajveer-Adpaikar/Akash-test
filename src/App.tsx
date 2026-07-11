@@ -33,29 +33,36 @@ function FloatingCTA() {
 }
 
 function SocialProofBar() {
+  const item = (label: string, sub: string) => (
+    <div className="flex items-center shrink-0 gap-6">
+      <div className="text-center">
+        <p className="text-primary text-lg sm:text-xl font-bold leading-none">{label}</p>
+        <p className="text-white/40 text-[10px] sm:text-xs whitespace-nowrap mt-1">{sub}</p>
+      </div>
+      <div className="w-px h-8 bg-white/10 shrink-0" />
+    </div>
+  );
+
+  const allItems = [
+    { label: '796K', sub: 'Instagram Views' },
+    { label: '32K', sub: 'Likes' },
+    { label: '6', sub: 'Musicians' },
+    { label: 'Birla White', sub: 'Corporate Client' },
+  ];
+
+  const renderItems = () => allItems.map((i) => item(i.label, i.sub));
+
   return (
-    <div className="bg-[#101010] border-y border-white/5">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-5">
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-center">
-          <div>
-            <p className="text-primary text-lg sm:text-xl font-bold">796K</p>
-            <p className="text-white/40 text-[10px] sm:text-xs">Instagram Views</p>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div>
-            <p className="text-primary text-lg sm:text-xl font-bold">32K</p>
-            <p className="text-white/40 text-[10px] sm:text-xs">Likes</p>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div>
-            <p className="text-primary text-lg sm:text-xl font-bold">6</p>
-            <p className="text-white/40 text-[10px] sm:text-xs">Musicians</p>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div>
-            <p className="text-primary text-lg sm:text-xl font-bold">Birla White</p>
-            <p className="text-white/40 text-[10px] sm:text-xs">Corporate Client</p>
-          </div>
+    <div className="bg-[#101010] border-y border-white/5 overflow-hidden">
+      <div className="hidden md:block max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-5">
+        <div className="flex items-center justify-center gap-8">
+          {renderItems()}
+        </div>
+      </div>
+      <div className="md:hidden py-4">
+        <div className="flex animate-marquee gap-6">
+          {renderItems()}
+          {renderItems()}
         </div>
       </div>
     </div>
