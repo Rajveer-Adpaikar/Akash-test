@@ -130,9 +130,9 @@ export default function HeroSection() {
         </nav>
 
         {/* Text + CTA on video — desktop only */}
-        <div className="hidden md:flex absolute inset-0 z-10 px-6 sm:px-8 md:px-10 lg:px-12 items-start pt-[66vh] pointer-events-none">
+        <div className="hidden md:flex absolute inset-0 z-10 px-6 sm:px-8 md:px-10 lg:px-12 items-start pt-[60vh] pointer-events-none">
           <div className="w-full grid grid-cols-12 gap-4 items-end pointer-events-auto">
-            <div className="col-span-12 md:col-span-4 md:col-start-9">
+            <div className="col-span-12 md:col-span-4 md:col-start-2">
               <p className="text-white text-xs sm:text-sm md:text-base leading-[1.2] mb-4 sm:mb-6 drop-shadow-md">
                 Goa&apos;s premier Bollywood ensemble — a 6-piece band bringing
                 high-energy live performances, romantic covers, and unforgettable

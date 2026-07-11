@@ -38,22 +38,22 @@ function SocialProofBar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-5">
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-center">
           <div>
-            <p className="text-primary text-lg sm:text-xl font-display font-bold">738K</p>
-            <p className="text-white/40 text-[10px] sm:text-xs">YouTube Views</p>
+            <p className="text-primary text-lg sm:text-xl font-bold">796K</p>
+            <p className="text-white/40 text-[10px] sm:text-xs">Instagram Views</p>
           </div>
           <div className="w-px h-8 bg-white/10" />
           <div>
-            <p className="text-primary text-lg sm:text-xl font-display font-bold">31K</p>
+            <p className="text-primary text-lg sm:text-xl font-bold">32K</p>
             <p className="text-white/40 text-[10px] sm:text-xs">Likes</p>
           </div>
           <div className="w-px h-8 bg-white/10" />
           <div>
-            <p className="text-primary text-lg sm:text-xl font-display font-bold">6</p>
+            <p className="text-primary text-lg sm:text-xl font-bold">6</p>
             <p className="text-white/40 text-[10px] sm:text-xs">Musicians</p>
           </div>
           <div className="w-px h-8 bg-white/10" />
           <div>
-            <p className="text-primary text-lg sm:text-xl font-display font-bold">Birla White</p>
+            <p className="text-primary text-lg sm:text-xl font-bold">Birla White</p>
             <p className="text-white/40 text-[10px] sm:text-xs">Corporate Client</p>
           </div>
         </div>

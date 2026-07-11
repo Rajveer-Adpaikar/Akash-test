@@ -9,12 +9,12 @@ interface ReelData {
 
 const REELS: ReelData[] = [
   { vimeo: '1208819326', caption: 'Latest performance highlight' },
-  { vimeo: '1208158917', instagram: 'https://www.instagram.com/reel/DTzWuQPDDwR/', caption: 'Live at a Goa destination wedding' },
-  { vimeo: '1208158916', instagram: 'https://www.instagram.com/reel/DZC7xYMSejP/', caption: 'High-energy Bollywood set' },
+  { vimeo: '1208158917', instagram: 'https://www.instagram.com/reel/DTzWuQPDDwR/', caption: 'Live at a Goan destination' },
+  { vimeo: '1208158916', instagram: 'https://www.instagram.com/reel/DZC7xYMSejP/', caption: 'High-energy performance with Papon' },
   { vimeo: '1208158881', instagram: 'https://www.instagram.com/reel/DVlh_pwj-PQ/', caption: 'Corporate event performance' },
   { vimeo: '1208158886', instagram: 'https://www.instagram.com/reel/DaVXSECMIhq/', caption: 'Wedding sangeet highlights' },
   { vimeo: '1208819325', caption: 'Romantic Bollywood cover' },
-  { vimeo: '1208819327', caption: 'Party anthem live medley' },
+  { vimeo: '1208819327', caption: 'Romantic moments made musical' },
 ];
 
 const LOAD_RETRIES = 2;
@@ -346,7 +346,7 @@ export default function ReelsSection() {
                   className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] rounded-2xl overflow-hidden bg-[#101010]"
                 >
                   <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
-                    {!loaded && !failed && (
+                    {!s.isClone && !loaded && !failed && (
                       <div className="absolute inset-0 flex items-center justify-center bg-[#181818] rounded-2xl z-10">
                         <div className="w-6 h-6 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
                       </div>
@@ -366,6 +366,7 @@ export default function ReelsSection() {
                       className="absolute inset-0 w-full h-full pointer-events-none"
                       allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                       title={s.caption || `Reel ${s.key}`}
+                      src={s.isClone ? `https://player.vimeo.com/video/${s.vimeo}?badge=0&autopause=0&loop=1&controls=0&title=0&byline=0&portrait=0&dnt=1&muted=1` : undefined}
                     />
                   </div>
                   {s.caption && !s.isClone && (
