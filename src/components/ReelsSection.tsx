@@ -196,14 +196,20 @@ export default function ReelsSection() {
     const firstKey = buildSlots()[FIRST_REAL].key;
     if (!section || seenRef.current) return;
 
+    const tryPlay = () => {
+      const player = playersRef.current.get(firstKey);
+      if (!player) return false;
+      player.setVolume(muted ? 0 : 0.7);
+      player.play();
+      activeKeyRef.current = firstKey;
+      return true;
+    };
+
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !seenRef.current) {
+          if (!tryPlay()) return;
           seenRef.current = true;
-          const player = playersRef.current.get(firstKey);
-          if (!player) return;
-          player.play();
-          activeKeyRef.current = firstKey;
           obs.disconnect();
         }
       },
@@ -211,7 +217,7 @@ export default function ReelsSection() {
     );
     obs.observe(section);
     return () => obs.disconnect();
-  }, [readyIds]);
+  }, [readyIds, muted]);
 
   // Mute reels when hero unmutes
   useEffect(() => {
@@ -249,7 +255,11 @@ export default function ReelsSection() {
       if (activeKeyRef.current && playersRef.current.has(activeKeyRef.current)) {
         playersRef.current.get(activeKeyRef.current)?.pause();
       }
-      playersRef.current.get(slots[target].key)?.play();
+      const nextPlayer = playersRef.current.get(slots[target].key);
+      if (nextPlayer) {
+        nextPlayer.setVolume(muted ? 0 : 0.7);
+        nextPlayer.play();
+      }
       activeKeyRef.current = slots[target].key;
       movingRef.current = false;
       return;
@@ -266,12 +276,13 @@ export default function ReelsSection() {
         if (activeKeyRef.current && playersRef.current.has(activeKeyRef.current)) {
           playersRef.current.get(activeKeyRef.current)?.pause();
         }
+        player.setVolume(muted ? 0 : 0.7);
         player.play();
         activeKeyRef.current = key;
       }
     };
     setTimeout(onDone, SNAP_MS + 50);
-  }, [snap]);
+  }, [snap, muted]);
 
   const scrollLeft = useCallback(() => navigate(-1), [navigate]);
   const scrollRight = useCallback(() => navigate(1), [navigate]);
