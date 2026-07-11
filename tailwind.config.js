@@ -10,9 +10,6 @@ export default {
         display: ['"Playfair Display"', 'serif'],
         body: ['Almarai', 'sans-serif'],
       },
-      animation: {
-        marquee: 'marquee 12s linear infinite',
-      },
     },
   },
   plugins: [],

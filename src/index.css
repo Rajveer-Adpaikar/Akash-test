@@ -108,8 +108,3 @@ body {
   background: #333;
   border-radius: 3px;
 }
-
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}

@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import HeroSection from './components/HeroSection';
 import AboutSection from './components/AboutSection';
 import ReelsSection from './components/ReelsSection';
@@ -33,6 +34,8 @@ function FloatingCTA() {
 }
 
 function SocialProofBar() {
+  const marqueeRef = useRef<HTMLDivElement>(null);
+
   const item = (label: string, sub: string) => (
     <div className="flex items-center shrink-0 gap-6">
       <div className="text-center">
@@ -52,15 +55,32 @@ function SocialProofBar() {
 
   const renderItems = () => allItems.map((i) => item(i.label, i.sub));
 
+  useEffect(() => {
+    const el = marqueeRef.current;
+    if (!el) return;
+    let pos = 0;
+    let id: number;
+    const step = () => {
+      pos -= 0.5;
+      const half = el.scrollWidth / 2;
+      if (pos <= -half) pos += half;
+      el.style.transform = `translateX(${pos}px)`;
+      id = requestAnimationFrame(step);
+    };
+    // Start after a brief delay so layout is settled
+    const start = setTimeout(() => { id = requestAnimationFrame(step); }, 100);
+    return () => { clearTimeout(start); cancelAnimationFrame(id); };
+  }, []);
+
   return (
-    <div className="bg-[#101010] border-y border-white/5 overflow-hidden">
+    <div className="bg-[#101010] border-y border-white/5">
       <div className="hidden md:block max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-5">
         <div className="flex items-center justify-center gap-8">
           {renderItems()}
         </div>
       </div>
-      <div className="md:hidden py-4">
-        <div className="flex animate-marquee gap-6">
+      <div className="md:hidden py-4 overflow-hidden">
+        <div ref={marqueeRef} className="flex gap-6" style={{ willChange: 'transform' }}>
           {renderItems()}
           {renderItems()}
         </div>
