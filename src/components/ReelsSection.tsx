@@ -21,10 +21,8 @@ const LOAD_RETRIES = 2;
 const READY_TIMEOUT = 10000;
 
 const NUM_REALS = REELS.length;       // 7
-const CLONE_LAST = 0;
 const FIRST_REAL = 1;
 const LAST_REAL = NUM_REALS;          // 7
-const CLONE_FIRST = NUM_REALS + 1;    // 8
 const SNAP_MS = 350;
 
 interface PlayerResult {
