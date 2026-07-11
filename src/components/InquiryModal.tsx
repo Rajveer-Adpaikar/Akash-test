@@ -29,7 +29,14 @@ export default function InquiryModal({ open, onClose }: Props) {
   const [errors, setErrors] = useState<Errors>({});
   const [form, setForm] = useState({ name: '', phone: '', email: '', message: '' });
 
-  if (!open) return null;
+  // Auto-focus first input on open + handle Escape at document level
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const reset = () => {
     setSent(false);
@@ -39,14 +46,7 @@ export default function InquiryModal({ open, onClose }: Props) {
     setForm({ name: '', phone: '', email: '', message: '' });
   };
 
-  // Auto-focus first input on open + handle Escape at document level
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  if (!open) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +96,7 @@ export default function InquiryModal({ open, onClose }: Props) {
   };
 
   const inputClass = (field: keyof Errors) =>
-    `w-full bg-black/60 border ${errors[field] ? 'border-red-500/60' : 'border-white/10'} rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors`;
+    `w-full bg-black/60 border ${errors[field] ? 'border-red-500/60' : 'border-white/10'} rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-primary/50 transition-colors`;
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Inquiry form" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>

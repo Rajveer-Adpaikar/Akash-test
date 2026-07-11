@@ -53,7 +53,7 @@ function SocialProofBar() {
     { label: 'Birla White', sub: 'Corporate Client' },
   ];
 
-  const renderItems = () => allItems.map((i) => item(i.label, i.sub));
+  const renderItems = () => allItems.map((i) => <div key={i.label}>{item(i.label, i.sub)}</div>);
 
   useEffect(() => {
     const el = marqueeRef.current;

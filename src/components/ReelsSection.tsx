@@ -308,7 +308,7 @@ export default function ReelsSection() {
 
   // ── Render ─────────────────────────────────────────────────
 
-  const slots = buildSlots();
+  const slots = buildSlots(); // ponytail: 7 reels, array of 9 objects, cheap enough. Memoize if reels grow significantly.
 
   return (
     <section ref={sectionRef} className="bg-black px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20" id="reels">
