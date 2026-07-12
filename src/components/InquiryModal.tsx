@@ -10,6 +10,7 @@ type Errors = Partial<Record<'name' | 'phone' | 'email' | 'message', string>>;
 
 const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY as string | undefined;
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
+const GSHEETS_URL = import.meta.env.VITE_GOOGLE_SHEETS_URL as string | undefined;
 
 function validate(form: { name: string; phone: string; email: string; message: string }): Errors {
   const e: Errors = {};
@@ -56,35 +57,49 @@ export default function InquiryModal({ open, onClose }: Props) {
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    // Fallback: if no Web3Forms key, use mailto as a backup
-    if (!WEB3FORMS_KEY) {
+    setSubmitting(true);
+    try {
+      // Primary: Google Sheets (via Apps Script)
+      if (GSHEETS_URL) {
+        const res = await fetch(GSHEETS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            email: form.email,
+            message: form.message,
+          }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error('Sheet write failed');
+      }
+
+      // Secondary: Web3Forms as email notification backup
+      if (WEB3FORMS_KEY) {
+        await fetch(WEB3FORMS_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject: 'Inquiry for Akash The Band',
+            from_name: form.name,
+            name: form.name,
+            phone: form.phone,
+            email: form.email || 'no-reply@example.com',
+            message: form.message,
+          }),
+        }).catch(() => {}); // non-blocking
+      }
+
+      setSent(true);
+      setTimeout(reset, 2000);
+    } catch {
+      // Fallback: mailto if Google Sheets + Web3Forms both fail
       const body = `Name: ${encodeURIComponent(form.name)}%0APhone: ${encodeURIComponent(form.phone)}%0AEmail: ${encodeURIComponent(form.email)}%0AMessage: ${encodeURIComponent(form.message)}`;
       window.location.href = `mailto:kanwarbharat@gmail.com?subject=Inquiry%20for%20Akash%20The%20Band&body=${body}`;
       setSent(true);
       setTimeout(reset, 2000);
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await fetch(WEB3FORMS_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          access_key: WEB3FORMS_KEY,
-          subject: 'Inquiry for Akash The Band',
-          from_name: form.name,
-          name: form.name,
-          phone: form.phone,
-          email: form.email || 'no-reply@example.com',
-          message: form.message,
-        }),
-      });
-      if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-      setSent(true);
-      setTimeout(reset, 2000);
-    } catch (err) {
-      setSubmitError('Failed to send. Please try again or email us directly.');
     } finally {
       setSubmitting(false);
     }
