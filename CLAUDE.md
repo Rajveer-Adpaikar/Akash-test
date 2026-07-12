@@ -4,7 +4,9 @@
 
 **Akash The Band** — single-page portfolio for Goa's premier Bollywood ensemble, led by Akash Mangeshkar. 6-piece band specializing in destination weddings, corporate events, and live gigs. Dark cinematic design with warm cream (#DEDBC8) palette.
 
-**Live:** https://rajveer-adpaikar.github.io/akash-the-band/
+**Live (Netlify):** https://akash-the-band.netlify.app/
+**GH Pages (old):** https://rajveer-adpaikar.github.io/akash-the-band/
+**GitHub:** https://github.com/ARISTO69/akash-the-band.git
 
 ---
 
@@ -16,7 +18,8 @@
 - **Icons:** Lucide React (Phone, Mail, Music2, MessageCircle, ArrowRight, Check, Volume2, VolumeX, ChevronLeft, ChevronRight, AlertTriangle, X, CheckCircle, AlertCircle)
 - **Fonts:** Almarai (global body, sans-serif), Playfair Display (accent headings, serif)
 - **Video:** Vimeo Player API (iframe embeds with independent Player instances)
-- **Deployment:** GitHub Pages via gh-pages package (branch: gh-pages)
+- **Deployment:** Netlify (primary) + GitHub Pages via gh-pages package (backup)
+- **Forms:** Google Sheets (via Apps Script) with email notification + Web3Forms backup + mailto fallback
 - **Linting:** oxlint
 
 ## Commands
@@ -33,6 +36,7 @@
 
 ```
 ├── index.html                    # Entry HTML: SEO meta, OG/Twitter, JSON-LD, preconnects
+├── netlify.toml                  # Netlify build config + SPA redirects
 ├── public/
 │   ├── 404.html                  # Custom error page (noise + glow + home button → /akash-the-band/)
 │   ├── favicon.ico               # 32×32 favicon (from New 32x32.png)
@@ -57,18 +61,20 @@
 │       ├── FeaturesSection.tsx   # 4-card responsive grid (group photo, live, corporate, weddings)
 │       ├── ReelsSection.tsx      # Vimeo carousel (clone-wrap, snap, touch swipe, lazy init)
 │       ├── FooterSection.tsx     # Social links, WhatsApp, phone, email, copyright
-│       └── InquiryModal.tsx      # Web3Forms contact form with validation + mailto fallback
+│       └── InquiryModal.tsx      # Google Sheets form → Web3Forms → mailto fallback
+├── apps-script.gs                # Google Apps Script for Sheets + email notification
 ├── tailwind.config.js            # colors.primary (#DEDBC8), fontFamily.display, fontFamily.body
 ├── postcss.config.js
-├── vite.config.ts                # base (/akash-the-band/), manualChunks (vendor, animations)
+├── vite.config.ts                # base (dynamic: env or '/'), manualChunks (vendor, animations)
 ├── tsconfig.json / tsconfig.app.json / tsconfig.node.json
 ├── package.json
+├── .env.example                  # Env var reference (VITE_WEB3FORMS_ACCESS_KEY, VITE_GOOGLE_SHEETS_URL)
 └── .gitignore
 ```
 
 ## Section Order (App.tsx)
 
-1. **HeroSection** — Vimeo background video, loading spinner, mute toggle, noise overlay, gradient overlay, navbar (About, Events, Services, Contact), descriptive text + "Inquire Now" CTA on desktop (overlaid) + mobile (below). Skip-to-content link as first focusable element.
+1. **HeroSection** — Fullscreen Vimeo background video, loading spinner, mute toggle, noise overlay, gradient overlay, navbar (About, Events, Services, Contact), descriptive text + "Inquire Now" CTA on desktop (overlaid) + mobile (below). Skip-to-content link as first focusable element.
 
 2. **SocialProofBar** (inline in App.tsx) — 738K views · 31K likes · 6 musicians · Birla White. Cream divider strips.
 
@@ -119,12 +125,19 @@
 
 ## InquiryModal Details
 
-- **Web3Forms** POST to `https://api.web3forms.com/submit`
-- Access key from `VITE_WEB3FORMS_ACCESS_KEY` env var
-- Mailto fallback (`kanwarbharat@gmail.com`) when key is unset
+- **Primary:** POSTs to Google Sheets via Apps Script (`VITE_GOOGLE_SHEETS_URL`)
+- **Secondary:** Also POSTs to Web3Forms (`VITE_WEB3FORMS_ACCESS_KEY`) as non-blocking backup
+- **Fallback:** Opens `mailto:kanwarbharat@gmail.com` if neither works
 - Validation: name (required), phone (`/^[\d\s+\-()]{7,15}$/`), email (optional, format check)
 - `role="dialog" aria-modal="true" aria-label="Inquiry form"` with ESC key close
 - Success state with CheckCircle icon → auto-reset after 2s
+
+## Google Sheets / Apps Script
+
+- File: `apps-script.gs` in project root (reference copy)
+- Creates an "Inquiries" sheet with columns: Timestamp, Name, Phone, Email, Message
+- Sends email notification to `goku006900@gmail.com` with inquiry details
+- Deploy as Web App: Execute as "Me", Access "Anyone"
 
 ## Custom CSS Utilities
 
@@ -137,9 +150,32 @@
 
 ## Build Config
 
-- `base: '/akash-the-band/'` in vite.config.ts for GitHub Pages subpath
+- `base: process.env.BASE_URL || '/'` in vite.config.ts (root for Netlify, set `BASE_URL=/akash-the-band/` for GH Pages)
 - Code splitting: `manualChunks` for vendor (React) and animations (Framer Motion)
 - TypeScript 6 with strict mode (tsc -b before build)
+- `netlify.toml`: build command `npm run build`, publish dir `dist`, SPA redirect `/* → /index.html`
+
+## Deployment
+
+- **Netlify (primary):** Auto-deploys from `master` branch. Set env vars in Netlify UI.
+- **GitHub Pages (backup):** `npm run deploy` (gh-pages -d dist). Built via `BASE_URL=/akash-the-band/ npm run build`.
+
+## Pending Tasks — Netlify Env Vars (UNFINISHED)
+
+Add these in **Netlify → Site settings → Environment variables**:
+
+| Key | Value |
+|-----|-------|
+| `VITE_WEB3FORMS_ACCESS_KEY` | Get from https://web3forms.com — sign up, copy access key |
+| `VITE_GOOGLE_SHEETS_URL` | The Apps Script Web App URL (see below) |
+
+**How to get `VITE_GOOGLE_SHEETS_URL`:**
+1. Go to https://sheets.new, create "Akash The Band Inquiries"
+2. Extensions → Apps Script → paste contents of `apps-script.gs`
+3. Deploy → New deployment → Type: Web app → Execute as: "Me" → Access: "Anyone"
+4. Copy the URL and add as `VITE_GOOGLE_SHEETS_URL`
+
+Once both env vars are set, Netlify auto-deploys after pushing to master, and the form will write to the sheet + email `goku006900@gmail.com`.
 
 ## WAT Framework
 
