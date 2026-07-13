@@ -84,7 +84,7 @@ export default function FeaturesSection() {
           <FeatureCard index={0}>
             <div className="relative flex-1 rounded-xl overflow-hidden min-h-[200px]">
               <img
-                src="/akash-the-band/Group.jpg"
+                src={`${import.meta.env.BASE_URL}Group.jpg`}
                 alt="Akash The Band — 6-piece Bollywood ensemble group photo for weddings and corporate events in Goa"
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
