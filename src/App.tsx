@@ -40,7 +40,7 @@ function SocialProofBar() {
     <div className="flex items-center shrink-0 gap-6">
       <div className="text-center">
         <p className="text-primary text-lg sm:text-xl font-bold leading-none">{label}</p>
-        <p className="text-white/40 text-[10px] sm:text-xs whitespace-nowrap mt-1">{sub}</p>
+        <p className="text-white/40 text-[10px] sm:text-xs whitespace-nowrap">{sub}</p>
       </div>
       <div className="w-px h-8 bg-white/10 shrink-0" />
     </div>
