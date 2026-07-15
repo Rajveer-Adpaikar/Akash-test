@@ -73,13 +73,13 @@ function SocialProofBar() {
   }, []);
 
   return (
-    <div className="bg-[#101010] border-y border-white/5">
-      <div className="hidden md:block max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-5">
+    <div className="bg-[#101010] border-y border-white/5 py-5">
+      <div className="hidden md:block max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-center gap-8">
           {renderItems()}
         </div>
       </div>
-      <div className="md:hidden py-4 overflow-hidden">
+      <div className="md:hidden overflow-hidden">
         <div ref={marqueeRef} className="flex gap-6" style={{ willChange: 'transform' }}>
           {renderItems()}
           {renderItems()}
