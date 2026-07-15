@@ -1,12 +1,12 @@
-# CLAUDE.md — Akash The Band Website
+# CLAUDE.md — Akash The Band Website (Test Copy)
 
 ## Project Overview
 
 **Akash The Band** — single-page portfolio for Goa's premier Bollywood ensemble, led by Akash Mangeshkar. 6-piece band specializing in destination weddings, corporate events, and live gigs. Dark cinematic design with warm cream (#DEDBC8) palette.
 
 **Live (Netlify):** https://akash-the-band.netlify.app/
-**GH Pages (old):** https://rajveer-adpaikar.github.io/akash-the-band/
-**GitHub:** https://github.com/ARISTO69/akash-the-band.git
+**GH Pages:** https://rajveer-adpaikar.github.io/Akash-test/
+**GitHub:** https://github.com/Rajveer-Adpaikar/Akash-test.git
 
 ---
 
@@ -26,7 +26,7 @@
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Vite dev server (localhost:5173/akash-the-band/) |
+| `npm run dev` | Start Vite dev server (localhost:5173/Akash-test/) |
 | `npm run build` | Type-check + production build to `dist/` |
 | `npm run preview` | Preview production build locally |
 | `npm run deploy` | Deploy `dist/` to GitHub Pages via gh-pages |
@@ -38,7 +38,7 @@
 ├── index.html                    # Entry HTML: SEO meta, OG/Twitter, JSON-LD, preconnects
 ├── netlify.toml                  # Netlify build config + SPA redirects
 ├── public/
-│   ├── 404.html                  # Custom error page (noise + glow + home button → /akash-the-band/)
+│   ├── 404.html                  # Custom error page (noise + glow + home button → /Akash-test/)
 │   ├── favicon.ico               # 32×32 favicon (from New 32x32.png)
 │   ├── favicon.svg               # SVG wrapper embedding 512×512 PNG (from New 512x512.png)
 │   ├── favicon-32.png            # Scaled 32px favicon
@@ -150,17 +150,17 @@
 
 ## Build Config
 
-- `base: process.env.BASE_URL || '/'` in vite.config.ts (root for Netlify, set `BASE_URL=/akash-the-band/` for GH Pages)
+- `base: process.env.BASE_URL || '/'` in vite.config.ts (set `BASE_URL=/Akash-test/` for GH Pages build)
 - Code splitting: `manualChunks` for vendor (React) and animations (Framer Motion)
 - TypeScript 6 with strict mode (tsc -b before build)
-- `netlify.toml`: build command `npm run build`, publish dir `dist`, SPA redirect `/* → /index.html`
 
 ## Deployment
 
-- **Netlify (primary):** Auto-deploys from `master` branch. Set env vars in Netlify UI.
-- **GitHub Pages (backup):** `npm run deploy` (gh-pages -d dist). Built via `BASE_URL=/akash-the-band/ npm run build`.
+- **GitHub Pages:** `npm run deploy` (cross-env BASE_URL=/Akash-test/ build + gh-pages).
 
-## Pending Tasks — Netlify Env Vars (UNFINISHED)
+## Pending Tasks — Netlify Env Vars (NOT APPLICABLE)
+
+This is a test copy. Netlify auto-deploy is not configured.
 
 Add these in **Netlify → Site settings → Environment variables**:
 

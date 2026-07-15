@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "deploy": "gh-pages -d dist"
+    "deploy": "tsc -b && cross-env BASE_URL=/Akash-test/ vite build && gh-pages -d dist"
   },
   "dependencies": {
     "framer-motion": "^12.42.2",
@@ -22,6 +22,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.5.2",
+    "cross-env": "^10.1.0",
     "gh-pages": "^6.3.0",
     "oxlint": "^1.71.0",
     "postcss": "^8.5.16",
